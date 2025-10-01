@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Group - {{ group['name'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body.high-contrast {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .font-small {
+            font-size: 14px;
+        }
+
+        .font-medium {
+            font-size: 18px;
+        }
+
+        .font-large {
+            font-size: 22px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        header,
+        main,
+        footer {
+            margin-bottom: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body class="font-medium">
+
+    <header>
+        <div style="display:flex; align-items:center;">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="NoteBridge Logo" height="50">
+            <div style="margin-left:10px;">Welcome, {{ user['full_name'] or user['username'] }}!</div>
+        </div>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Edit Group: {{ group['name'] }}</h1>
+
+        <!-- Edit group info -->
+        <section>
+            <h2>Group Info</h2>
+            <form method="post" action="{{ url_for('update_group', group_id=group['id']) }}">
+                <label>
+                    Group Name:
+                    <input type="text" name="name" value="{{ group['name'] }}" required>
+                </label>
+                <br><br>
+                <label>
+                    Description:
+                    <textarea name="description" rows="3">{{ group['description'] }}</textarea>
+                </label>
+                <br><br>
+                <button type="submit" class="btn">Update Group</button>
+            </form>
+        </section>
+
+        <!-- Group members -->
+        <section>
+            <h2>Members</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member['full_name'] or '-' }}</td>
+                        <td>{{ member['username'] }}</td>
+                        <td>{{ member['role'] }}</td>
+                        <td>
+                            {% if member['user_id'] != user['id'] %}
+                            <form method="post"
+                                action="{{ url_for('remove_member', group_id=group['id'], user_id=member['user_id']) }}"
+                                style="display:inline;">
+                                <button type="submit" class="btn">Remove</button>
+                            </form>
+                            {% else %}
+                            Owner
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Add new member -->
+            <h3>Add Member</h3>
+            <form method="post" action="{{ url_for('add_member', group_id=group['id']) }}">
+                <label>
+                    Username:
+                    <input type="text" name="username" required>
+                </label>
+                <label>
+                    Role:
+                    <select name="role">
+                        <option value="member" selected>Member</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </label>
+                <button type="submit" class="btn">Add Member</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        &copy; 2025 NoteBridge. All rights reserved.
+    </footer>
+
+</body>
+
+</html>
