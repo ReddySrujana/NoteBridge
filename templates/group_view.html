@@ -104,8 +104,8 @@
             <div class="welcome">Welcome, {{ user['full_name'] or user['username'] }}!</div>
         </div>
         <nav>
-            <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
-            <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn">Dashboard</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn">Logout</a>
         </nav>
     </header>
 
@@ -116,9 +116,9 @@
             <p><strong>Created At:</strong> {{ group['created_at'] }}</p>
 
             <div class="actions">
-                <a href="{{ url_for('edit_group', group_id=group['id']) }}" class="btn">Edit Group</a>
-                <form method="POST" action="{{ url_for('delete_group', group_id=group['id']) }}" style="display:inline"
-                    onsubmit="return confirm('Are you sure you want to delete this group?');">
+                <a href="{{ url_for('group.edit_group', group_id=group['id']) }}" class="btn">Edit Group</a>
+                <form method="POST" action="{{ url_for('group.delete_group', group_id=group['id']) }}"
+                    style="display:inline" onsubmit="return confirm('Are you sure you want to delete this group?');">
                     <button type="submit" class="btn">Delete Group</button>
                 </form>
             </div>
@@ -142,7 +142,7 @@
                         <td>
                             {% if m['user_id'] != user['id'] %}
                             <form method="POST"
-                                action="{{ url_for('remove_member', group_id=group['id'], user_id=m['user_id']) }}"
+                                action="{{ url_for('group.remove_member', group_id=group['id'], user_id=m['user_id']) }}"
                                 style="display:inline" onsubmit="return confirm('Remove this member?');">
                                 <button type="submit" class="btn">Remove</button>
                             </form>

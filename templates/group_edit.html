@@ -88,8 +88,8 @@
             <div style="margin-left:10px;">Welcome, {{ user['full_name'] or user['username'] }}!</div>
         </div>
         <nav>
-            <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
-            <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn">Dashboard</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn">Logout</a>
         </nav>
     </header>
 
@@ -99,7 +99,7 @@
         <!-- Edit group info -->
         <section>
             <h2>Group Info</h2>
-            <form method="post" action="{{ url_for('update_group', group_id=group['id']) }}">
+            <form method="post" action="{{ url_for('group.edit_group', group_id=group['id']) }}">
                 <label>
                     Group Name:
                     <input type="text" name="name" value="{{ group['name'] }}" required>
@@ -135,7 +135,7 @@
                         <td>
                             {% if member['user_id'] != user['id'] %}
                             <form method="post"
-                                action="{{ url_for('remove_member', group_id=group['id'], user_id=member['user_id']) }}"
+                                action="{{ url_for('group.remove_member', group_id=group['id'], user_id=member['user_id']) }}"
                                 style="display:inline;">
                                 <button type="submit" class="btn">Remove</button>
                             </form>
@@ -150,7 +150,7 @@
 
             <!-- Add new member -->
             <h3>Add Member</h3>
-            <form method="post" action="{{ url_for('add_member', group_id=group['id']) }}">
+            <form method="post" action="{{ url_for('group.add_member', group_id=group['id']) }}">
                 <label>
                     Username:
                     <input type="text" name="username" required>

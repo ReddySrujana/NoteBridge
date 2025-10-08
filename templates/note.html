@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>{{ note['title'] }} - Note</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
+
 <body>
   <!-- Navbar -->
   <nav class="navbar">
-    <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
-    <a href="{{ url_for('view_notebook', notebook_id=note['notebook_id']) }}" class="btn">Notebook</a>
+    <a href="{{ url_for('dashboard.dashboard') }}" class="btn">Dashboard</a>
+    <a href="{{ url_for('notebook.view_notebook', notebook_id=note['notebook_id']) }}" class="btn">Notebook</a>
     <span class="navbar-title">{{ note['title'] }}</span>
-    <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn">Logout</a>
+    <button id="delete-note-btn" class="btn" style="margin-left: auto;">🗑️ Delete Note</button>
   </nav>
 
   <main>
@@ -44,24 +47,38 @@
     const noteContent = document.getElementById('note-content');
     const dictateBtn = document.getElementById('dictate-btn');
     const clearBtn = document.getElementById('clear-btn');
+    const deleteBtn = document.getElementById('delete-note-btn');
 
     socket.emit('join_note', { note_id: noteId });
 
-    // ---------- Save button ----------
-    saveBtn.addEventListener('click', () => {
-      socket.emit('edit', {
-        note_id: noteId,
-        content: editor.value,
-        title: "{{ note['title'] }}"
+    // Save note using JSON to fix 415 error
+    saveBtn.addEventListener('click', async () => {
+      const content = editor.value;
+      const title = "{{ note['title'] }}";
+
+      const res = await fetch(`/note/${noteId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content })
       });
+
+      if (res.ok) {
+        socket.emit('edit', { note_id: noteId, content, title });
+        noteContent.innerHTML = `<pre>${content}</pre>`;
+      }
     });
 
-    // ---------- Clear button ----------
-    clearBtn.addEventListener('click', () => {
-      editor.value = '';
+    // Clear editor
+    clearBtn.addEventListener('click', () => editor.value = '');
+
+    // Delete note
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete this note?')) return;
+      const res = await fetch(`/note/${noteId}`, { method: 'DELETE' });
+      if (res.ok) window.location.href = `/notebook/{{ note['notebook_id'] }}`;
     });
 
-    // ---------- Live update from server ----------
+    // Live updates
     socket.on('note_updated', (data) => {
       if (data.note_id === noteId) {
         editor.value = data.content;
@@ -69,55 +86,34 @@
       }
     });
 
-    // ---------- Voice dictation ----------
-    let recognizing = false;
-    let recognition;
-
+    // Voice dictation
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognizing = false;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-        recognition.onstart = () => {
-            recognizing = true;
-            dictateBtn.textContent = '🛑 Stop Dictation';
-        };
+      recognition.onstart = () => { recognizing = true; dictateBtn.textContent = '🛑 Stop Dictation'; };
+      recognition.onend = () => { recognizing = false; dictateBtn.textContent = '🎤 Dictate'; };
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) transcript += event.results[i][0].transcript + ' ';
+        }
+        if (transcript) {
+          editor.value += transcript;
+          socket.emit('edit', { note_id: noteId, content: editor.value, title: "{{ note['title'] }}" });
+        }
+      };
 
-        recognition.onend = () => {
-            recognizing = false;
-            dictateBtn.textContent = '🎤 Dictate';
-        };
-
-        recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    transcript += event.results[i][0].transcript + ' ';
-                }
-            }
-            if (transcript) {
-                editor.value += transcript;
-                socket.emit('edit', {
-                    note_id: noteId,
-                    content: editor.value,
-                    title: "{{ note['title'] }}"
-                });
-            }
-        };
-
-        dictateBtn.addEventListener('click', () => {
-            if (recognizing) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        });
+      dictateBtn.addEventListener('click', () => recognizing ? recognition.stop() : recognition.start());
     } else {
-        dictateBtn.disabled = true;
-        dictateBtn.textContent = 'Voice not supported';
+      dictateBtn.disabled = true;
+      dictateBtn.textContent = 'Voice not supported';
     }
   </script>
 </body>
+
 </html>
