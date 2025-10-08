@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 * {
   margin: 0;
   padding: 0;
@@ -605,3 +606,179 @@ main.dashboard form {
     }
 }
 >>>>>>> 43d8451 (Updated code for Sprint 1)
+=======
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f9fafb;
+  color: #111;
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+h1, h2, h3 {
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  display: inline-block;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background-color: #1d4ed8;
+}
+
+form {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 500px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+ul {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+}
+
+ul li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+ul li a {
+  font-weight: bold;
+}
+
+header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+main {
+  max-width: 900px;
+  margin: auto;
+  background: #fff;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+:focus {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+#note-content {
+  margin: 1rem 0;
+  background: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2563eb;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.navbar a {
+  color: white;
+  margin-right: 1rem;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+.navbar-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+footer {
+  margin-top: 2rem;
+  text-align: center;
+  padding: 1rem;
+  background: #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+#editor {
+  width: 100%;
+  min-height: 150px;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+>>>>>>> origin/main

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -243,3 +244,128 @@
 
 </html>
 >>>>>>> 43d8451 (Updated code for Sprint 1)
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ note['title'] }} - Note</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
+    <a href="{{ url_for('view_notebook', notebook_id=note['notebook_id']) }}" class="btn">Notebook</a>
+    <span class="navbar-title">{{ note['title'] }}</span>
+    <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+  </nav>
+
+  <main>
+    <article id="note-content">
+      <pre>{{ note['content'] }}</pre>
+    </article>
+
+    <section>
+      <h2>Edit Note</h2>
+      <textarea id="editor">{{ note['content'] }}</textarea>
+      <div class="buttons">
+        <button id="save-btn" class="btn">Save</button>
+        <button id="dictate-btn" class="btn">🎤 Dictate</button>
+        <button id="clear-btn" class="btn">Clear</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; {{ current_year or 2025 }} NoteBridge</p>
+  </footer>
+
+  <script>
+    const socket = io();
+    const noteId = {{ note['id'] }};
+    const editor = document.getElementById('editor');
+    const saveBtn = document.getElementById('save-btn');
+    const noteContent = document.getElementById('note-content');
+    const dictateBtn = document.getElementById('dictate-btn');
+    const clearBtn = document.getElementById('clear-btn');
+
+    socket.emit('join_note', { note_id: noteId });
+
+    // ---------- Save button ----------
+    saveBtn.addEventListener('click', () => {
+      socket.emit('edit', {
+        note_id: noteId,
+        content: editor.value,
+        title: "{{ note['title'] }}"
+      });
+    });
+
+    // ---------- Clear button ----------
+    clearBtn.addEventListener('click', () => {
+      editor.value = '';
+    });
+
+    // ---------- Live update from server ----------
+    socket.on('note_updated', (data) => {
+      if (data.note_id === noteId) {
+        editor.value = data.content;
+        noteContent.innerHTML = `<pre>${data.content}</pre>`;
+      }
+    });
+
+    // ---------- Voice dictation ----------
+    let recognizing = false;
+    let recognition;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            recognizing = true;
+            dictateBtn.textContent = '🛑 Stop Dictation';
+        };
+
+        recognition.onend = () => {
+            recognizing = false;
+            dictateBtn.textContent = '🎤 Dictate';
+        };
+
+        recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    transcript += event.results[i][0].transcript + ' ';
+                }
+            }
+            if (transcript) {
+                editor.value += transcript;
+                socket.emit('edit', {
+                    note_id: noteId,
+                    content: editor.value,
+                    title: "{{ note['title'] }}"
+                });
+            }
+        };
+
+        dictateBtn.addEventListener('click', () => {
+            if (recognizing) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        dictateBtn.disabled = true;
+        dictateBtn.textContent = 'Voice not supported';
+    }
+  </script>
+</body>
+</html>
+>>>>>>> origin/main

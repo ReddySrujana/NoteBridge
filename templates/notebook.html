@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,3 +322,167 @@
 
 </html>
 >>>>>>> 43d8451 (Updated code for Sprint 1)
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ notebook['title'] }} - Notebook</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
+    <span class="navbar-title">{{ notebook['title'] }}</span>
+    <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+  </nav>
+
+  <main>
+    <section>
+      <h2>Notes</h2>
+      <ul id="notes-list">
+        {% for n in notes %}
+          <li>
+            <a href="{{ url_for('view_note', note_id=n['id']) }}">{{ n['title'] }}</a>
+            <button class="btn delete-note" data-id="{{ n['id'] }}">🗑️ Delete</button>
+          </li>
+        {% else %}
+          <li>No notes in this notebook.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Create New Note</h2>
+      <form id="note-form">
+        <input type="hidden" name="notebook_id" value="{{ notebook['id'] }}">
+        <input type="text" name="title" id="note-title" placeholder="Note title">
+        <textarea name="content" id="note-content" placeholder="Write your note here..."></textarea>
+        <button type="button" id="dictate-btn" class="btn">🎤 Dictate</button>
+        <button type="submit" class="btn">Add Note</button>
+        <button type="button" id="clear-btn" class="btn">Clear</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; {{ current_year or 2025 }} NoteBridge</p>
+  </footer>
+
+  <script>
+    const socket = io();
+    const noteContent = document.getElementById('note-content');
+    const noteTitle = document.getElementById('note-title');
+    const dictateBtn = document.getElementById('dictate-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const noteForm = document.getElementById('note-form');
+    const notesList = document.getElementById('notes-list');
+
+    let recognizing = false;
+    let recognition;
+    let tempNoteId = 'temp_' + Date.now(); // temporary live note ID
+    socket.emit('join_note', { note_id: tempNoteId });
+
+    // Receive live updates from other users
+    socket.on('note_updated', (data) => {
+        if (data.note_id === tempNoteId) {
+            noteContent.value = data.content;
+        }
+    });
+
+    // Speech recognition setup
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            recognizing = true;
+            dictateBtn.textContent = '🛑 Stop Dictation';
+        };
+
+        recognition.onend = () => {
+            recognizing = false;
+            dictateBtn.textContent = '🎤 Dictate';
+        };
+
+        recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    transcript += event.results[i][0].transcript;
+                }
+            }
+            if (transcript) {
+                noteContent.value += transcript + ' ';
+                socket.emit('edit', {
+                    note_id: tempNoteId,
+                    content: noteContent.value,
+                    title: noteTitle.value || 'Untitled'
+                });
+            }
+        };
+
+        dictateBtn.addEventListener('click', () => {
+            if (recognizing) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        dictateBtn.disabled = true;
+        dictateBtn.textContent = 'Voice not supported';
+    }
+
+    // Clear button for creating notes
+    clearBtn.addEventListener('click', () => {
+        noteTitle.value = '';
+        noteContent.value = '';
+    });
+
+    // Submit new note
+    noteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = noteTitle.value || 'Untitled';
+        const content = noteContent.value;
+
+        const formData = new URLSearchParams({
+            notebook_id: '{{ notebook["id"] }}',
+            title: title,
+            content: content
+        });
+
+        const response = await fetch('{{ url_for("create_note") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+
+        if (response.ok) {
+            const newNoteId = await response.text();
+            socket.emit('leave_note', { note_id: tempNoteId });
+            tempNoteId = newNoteId;
+            socket.emit('join_note', { note_id: tempNoteId });
+            window.location.href = `/note/${tempNoteId}`;
+        }
+    });
+
+    // Delete note
+    notesList.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-note')) {
+            const noteId = e.target.dataset.id;
+            if (!confirm('Are you sure you want to delete this note?')) return;
+            const res = await fetch(`/api/note/${noteId}`, { method: 'DELETE' });
+            if (res.ok) e.target.closest('li').remove();
+        }
+    });
+  </script>
+</body>
+</html>
+>>>>>>> origin/main
