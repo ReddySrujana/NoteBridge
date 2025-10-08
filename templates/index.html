@@ -1,0 +1,104 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NoteBridge - Welcome</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>Welcome to NoteBridge</h1>
+    <p>A collaborative, accessible note-taking platform for inclusive learning.</p>
+    <nav>
+      <a href="{{ url_for('login') }}" class="btn">Login</a>
+      <a href="{{ url_for('register') }}" class="btn">Register</a>
+    </nav>
+  </main>
+</body>
+</html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>NoteBridge - Welcome</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="NoteBridge Logo">
+      <h1>NoteBridge</h1>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Welcome to NoteBridge</h2>
+      <p>A collaborative, accessible note-taking platform for inclusive learning.</p>
+      <nav>
+        <a href="{{ url_for('auth.login') }}" class="btn">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn">Register</a>
+      </nav>
+    </section>
+
+    <section class="slider">
+      <div class="slides">
+        <div class="slide active">
+          <img src="{{ url_for('static', filename='slider1.jpg') }}" alt="Slide 1">
+          <p>Collaborate seamlessly with your peers.</p>
+        </div>
+        <div class="slide">
+          <img src="{{ url_for('static', filename='slider2.jpg') }}" alt="Slide 2">
+          <p>Organize your notes efficiently.</p>
+        </div>
+        <div class="slide">
+          <img src="{{ url_for('static', filename='slider3.jpg') }}" alt="Slide 3">
+          <p>Learn inclusively, anytime, anywhere.</p>
+        </div>
+      </div>
+      <div class="slider-controls">
+        <span class="prev">&#10094;</span>
+        <span class="next">&#10095;</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 NoteBridge. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // slider functionality
+    const slides = document.querySelectorAll('.slide');
+    let currentSlide = 0;
+
+    const showSlide = index => {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+      });
+    };
+
+    document.querySelector('.prev').addEventListener('click', () => {
+      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+      showSlide(currentSlide);
+    });
+
+    document.querySelector('.next').addEventListener('click', () => {
+      currentSlide = (currentSlide + 1) % slides.length;
+      showSlide(currentSlide);
+    });
+
+    setInterval(() => {
+      currentSlide = (currentSlide + 1) % slides.length;
+      showSlide(currentSlide);
+    }, 5000);
+  </script>
+</body>
+
+</html>
+>>>>>>> 43d8451 (Updated code for Sprint 1)

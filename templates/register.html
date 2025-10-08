@@ -1,0 +1,58 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - NoteBridge</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>Create an Account</h1>
+    <form method="post" aria-label="Register form">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="full_name">Full Name</label>
+      <input type="text" id="full_name" name="full_name">
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit" class="btn">Register</button>
+    </form>
+    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
+  </main>
+</body>
+</html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Register - NoteBridge</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <main>
+    <h1>Create an Account</h1>
+    <form method="post" aria-label="Register form">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="full_name">Full Name</label>
+      <input type="text" id="full_name" name="full_name">
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit" class="btn">Register</button>
+    </form>
+    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a>.</p>
+  </main>
+</body>
+
+</html>
+>>>>>>> 43d8451 (Updated code for Sprint 1)
