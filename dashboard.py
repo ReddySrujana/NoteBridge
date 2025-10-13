@@ -36,7 +36,7 @@ def dashboard():
         shared_notebooks=shared_notebooks,
         groups=groups
     )
-
+# get notes text for a specific note
 @dashboard_bp.route('/get_notes_text/<int:note_id>')
 @login_required
 def get_notes_text(note_id):
@@ -49,6 +49,8 @@ def get_notes_text(note_id):
         return jsonify({'error': 'Note not found'}), 404
     return jsonify({'notes_text': note['content'], 'title': note['title']})
 
+
+# get dashboard text summary
 @dashboard_bp.route('/get_dashboard_text')
 @login_required
 def get_dashboard_text():
