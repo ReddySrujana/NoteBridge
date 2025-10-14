@@ -258,6 +258,20 @@
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
+      // Mapping number words to digits
+      const numberMap = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10
+      };
+
       recognition.onresult = (event) => {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -266,15 +280,25 @@
         transcript = transcript.trim();
         if (!transcript) return;
 
-        if (transcript.includes("open chapter 1")) {
-          window.location.href = "http://127.0.0.1:5000/note/1";
-        } else if (transcript.includes("open chapter 2")) {
-          window.location.href = "http://127.0.0.1:5000/note/2";
-        } else if (transcript.includes("dashboard") || transcript.includes("go back") || transcript.includes("back")) {
-          window.location.href = "{{ url_for('dashboard.dashboard') }}";
-        } else {
-          noteContent.value += transcript + " ";
+        // Check for "open chapter X"
+        const match = transcript.match(/open chapter (\d+|one|two|three|four|five|six|seven|eight|nine|ten)/);
+        if (match) {
+          recognition.stop();
+          let chapter = match[1];
+          if (numberMap[chapter]) chapter = numberMap[chapter];
+          window.location.href = `/note/${chapter}`;
+          return;
         }
+
+        // Check for dashboard navigation
+        if (/(dashboard|go back|back)/.test(transcript)) {
+          recognition.stop();
+          window.location.href = "{{ url_for('dashboard.dashboard') }}";
+          return;
+        }
+
+        // Otherwise, append to note
+        noteContent.value += transcript + " ";
       };
 
       recognition.onerror = (e) => console.log("Speech error:", e.error);
@@ -282,8 +306,7 @@
       recognition.start();
 
       dictateBtn.addEventListener('click', () => {
-        if (recognition.running) recognition.stop();
-        else recognition.start();
+        recognition.running ? recognition.stop() : recognition.start();
       });
     } else {
       dictateBtn.disabled = true;
