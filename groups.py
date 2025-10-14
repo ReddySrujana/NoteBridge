@@ -4,10 +4,9 @@ from database import get_db
 from werkzeug.security import generate_password_hash
 import datetime
 
-group_bp = Blueprint('group', __name__, url_prefix='/groups', template_folder='templates')
+group_bp = Blueprint('group', __name__, url_prefix='/groups')
 
-
-#  Helper 
+# Helper to get group by ID
 def get_group(group_id):
     db = get_db()
     group = db.execute('SELECT * FROM groups WHERE id=?', (group_id,)).fetchone()
@@ -15,7 +14,7 @@ def get_group(group_id):
         abort(404, "Group not found")
     return group
 
-
+# Helper to get members of a group
 def get_members(group_id):
     db = get_db()
     members = db.execute(
@@ -26,8 +25,7 @@ def get_members(group_id):
     ).fetchall()
     return members
 
-
-#  Create Group 
+# POST: Handle group creation (triggered from dashboard form)
 @group_bp.route('/create', methods=['POST'])
 @login_required
 def create_group():
@@ -50,7 +48,7 @@ def create_group():
         (group_id, session.get('user_id'), 'owner', now)
     )
 
-    # Add other members
+    # Add other members if provided
     for uname in member_names:
         user = db.execute('SELECT id FROM users WHERE username=?', (uname,)).fetchone()
         if not user:
@@ -70,8 +68,7 @@ def create_group():
     db.commit()
     return redirect(url_for('dashboard.dashboard'))
 
-
-#  View Group 
+# View a group
 @group_bp.route('/<int:group_id>')
 @login_required
 def view_group(group_id):
@@ -80,8 +77,7 @@ def view_group(group_id):
     user = current_user()
     return render_template('group_view.html', group=group, members=members, user=user)
 
-
-#  Edit Group 
+# Edit a group
 @group_bp.route('/<int:group_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_group(group_id):
@@ -98,8 +94,7 @@ def edit_group(group_id):
     user = current_user()
     return render_template('group_edit.html', group=group, members=members, user=user)
 
-
-#  Delete Group 
+# Delete a group
 @group_bp.route('/<int:group_id>/delete', methods=['POST'])
 @login_required
 def delete_group(group_id):
@@ -109,8 +104,7 @@ def delete_group(group_id):
     db.commit()
     return redirect(url_for('dashboard.dashboard'))
 
-
-#  Add Member 
+# Add member to group
 @group_bp.route('/<int:group_id>/add_member', methods=['POST'])
 @login_required
 def add_member(group_id):
@@ -136,8 +130,7 @@ def add_member(group_id):
     db.commit()
     return redirect(url_for('group.view_group', group_id=group_id))
 
-
-#  Remove Member 
+# Remove member from group
 @group_bp.route('/<int:group_id>/remove_member/<int:user_id>', methods=['POST'])
 @login_required
 def remove_member(group_id, user_id):
@@ -145,3 +138,17 @@ def remove_member(group_id, user_id):
     db.execute('DELETE FROM group_members WHERE group_id=? AND user_id=?', (group_id, user_id))
     db.commit()
     return redirect(url_for('group.view_group', group_id=group_id))
+
+@group_bp.route('', methods=['GET'])
+@login_required
+def list_groups():
+    db = get_db()
+    groups = db.execute(
+        'SELECT g.id, g.name, '
+        '(SELECT COUNT(*) FROM group_members gm WHERE gm.group_id=g.id) AS members '
+        'FROM groups g'
+    ).fetchall()
+    user = current_user()
+    # Pass `group=None` so template won't crash
+    return render_template('group_view.html', groups=groups, group=None, user=user)
+
