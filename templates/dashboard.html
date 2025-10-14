@@ -4,261 +4,361 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard - NoteBridge</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f8fa;
+      color: #2c3e50;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 25px 15px;
+      box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 2px solid #ecf0f1;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #ecf0f1;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar a {
+      width: 100%;
+      text-decoration: none;
+      color: #ecf0f1;
+      padding: 12px 15px;
+      margin: 5px 0;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      text-align: left;
+      cursor: pointer;
+      font-size: 15px;
+      display: block;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(3px);
+    }
+
+    .main-content {
+      margin-left: 260px;
+      padding: 30px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      background: #fff;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .welcome {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    .accessibility-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    #search-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #searchInput {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    .btn {
+      background: #2980b9;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #1f6391;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 10px rgba(41, 128, 185, 0.2);
+    }
+
+    section {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease;
+    }
+
+    section:hover {
+      transform: translateY(-2px);
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #f9fbfd;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      transition: all 0.3s ease;
+    }
+
+    li:hover {
+      background: #eef4f8;
+      transform: scale(1.01);
+    }
+
+    li a {
+      color: #2c3e50;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    li a:hover {
+      color: #2980b9;
+    }
+
+    form.inline-form {
+      display: inline;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 30px 20px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      border-top: 4px solid #2980b9;
+    }
+
+    .font-small {
+      font-size: 14px;
+    }
+
+    .font-medium {
+      font-size: 16px;
+    }
+
+    .font-large {
+      font-size: 20px;
+    }
+
+    .high-contrast {
+      background: black;
+      color: white !important;
+    }
+
+    .high-contrast .sidebar {
+      background: black;
+      color: white;
+    }
+
+    .high-contrast .sidebar a {
+      color: white;
+    }
+  </style>
 </head>
 
-<body class="font-medium dashboard-body">
-  <header>
-    <div class="logo">
-      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="NoteBridge Logo">
-      <div class="welcome">Welcome, {{ user['full_name'] or user['username'] }}!</div>
-    </div>
-    <nav>
-      <a href="{{ url_for('auth.logout') }}" class="btn">Logout</a>
-    </nav>
-  </header>
-
-  <div class="accessibility-controls" aria-label="Accessibility settings" role="region">
-    <label for="font-size">Font Size:</label>
-    <select id="font-size" onchange="changeFontSize(this.value)">
-      <option value="font-small">Small</option>
-      <option value="font-medium" selected>Medium</option>
-      <option value="font-large">Large</option>
-    </select>
-
-    <label for="contrast-toggle">High Contrast:</label>
-    <input type="checkbox" id="contrast-toggle" onchange="toggleContrast(this.checked)">
-
-    <button onclick="readDashboard()" aria-label="Read full dashboard">🔊 Read Page</button>
-    <button onclick="startVoiceCommand()" aria-label="Start voice command">🎤 Voice Command</button>
+<body>
+  <div class="sidebar">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="User Avatar">
+    <h2>{{ user['full_name'] or user['username'] }}</h2>
+    <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('notebook.list_notebooks') }}">Notebooks</a>
+    <a href="{{ url_for('help.help_page') }}">Help</a>
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
   </div>
 
-  <main id="main-content" class="dashboard">
-    <section aria-label="Notebooks" role="region">
-      <h2>Your Notebooks</h2>
-      <input type="text" id="search-notes" placeholder="Search Notes..." oninput="filterNotes()"
-        aria-label="Search Notes">
-      <div id="search-status" aria-live="polite"></div>
-      <ul id="notebook-list">
-        {% for nb in notebooks %}
-        <li>
-          <a href="{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}" aria-label="Open {{ nb['title'] }}">
-            {{ nb['title'] }}
-          </a>
-          <button class="tts-btn" onclick="playNote('{{ nb['id'] }}')" aria-label="Play {{ nb['title'] }}">🔊</button>
-          <button class="tts-btn" onclick="stopNote()" aria-label="Stop {{ nb['title'] }}">⏹</button>
-        </li>
-        {% else %}
-        <li>No notebooks yet.</li>
-        {% endfor %}
-      </ul>
+  <div class="main-content" id="main-content">
+    <header>
+      <div class="welcome">Welcome, {{ user['full_name'] or user['username'] }}!</div>
+    </header>
 
-      <form method="post" action="{{ url_for('notebook.create_notebook') }}">
-        <input type="text" name="title" placeholder="New Notebook Title" aria-label="New notebook title"
-          id="new-notebook-input">
-        <label><input type="checkbox" name="is_shared"> Shared?</label>
-        <button type="submit" class="btn">Create Notebook</button>
-      </form>
-    </section>
+    <div class="accessibility-controls">
+      <label for="font-size">Font size:</label>
+      <select id="font-size" onchange="changeFontSize(this.value)">
+        <option value="font-small">Small</option>
+        <option value="font-medium" selected>Medium</option>
+        <option value="font-large">Large</option>
+      </select>
+      <label for="contrast-toggle">High contrast:</label>
+      <input type="checkbox" id="contrast-toggle" onchange="toggleContrast(this.checked)">
+      <button onclick="startVoiceRecognition()" class="btn">Voice command</button>
+    </div>
 
-    <section aria-label="Groups" role="region">
-      <h2>Groups</h2>
-      <ul>
-        {% for g in groups %}
-        <li>
-          <strong>{{ g['name'] }}</strong> ({{ g['members'] }} members)
-          <a href="{{ url_for('group.view_group', group_id=g['id']) }}" class="btn">View</a>
-          <a href="{{ url_for('group.edit_group', group_id=g['id']) }}" class="btn">Edit</a>
-          <form method="post" action="{{ url_for('group.delete_group', group_id=g['id']) }}" class="inline-form">
-            <button type="submit" class="btn">Delete</button>
-          </form>
-        </li>
-        {% else %}
-        <li>No groups yet.</li>
-        {% endfor %}
-      </ul>
-
-      <form method="post" action="{{ url_for('group.create_group') }}">
-        <input type="text" name="name" placeholder="Group Name" aria-label="Group Name" required>
-        <div id="members-container">
-          <h4>Members</h4>
-          <div class="member-entry">
-            <input type="text" name="member_name[]" placeholder="Name" required>
-            <input type="text" name="member_id[]" placeholder="Student ID" required>
-            <input type="text" name="member_course[]" placeholder="Course/Project" required>
-            <button type="button" onclick="removeMember(this)">Remove</button>
-          </div>
+    <main id="dashboard-content">
+      <section>
+        <h2>Your notebooks</h2>
+        <div id="search-container">
+          <input type="text" id="searchInput" placeholder="Search notebooks...">
         </div>
-        <button type="button" onclick="addMember()">Add Member</button>
-        <button type="submit" class="btn">Create Group</button>
-      </form>
-    </section>
-  </main>
+        <ul id="notebook-list">
+          {% for nb in notebooks %}
+          <li>
+            <a href="{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}">{{ nb['title'] }}</a>
+            <div>
+              <button class="btn"
+                onclick="window.location.href='{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}'">Open</button>
+              <form method="post" action="{{ url_for('notebook.delete_notebook', notebook_id=nb['id']) }}"
+                class="inline-form" onsubmit="return confirm('Delete this notebook?')">
+                <button type="submit" class="btn" style="background:#e74c3c;">Delete</button>
+              </form>
+            </div>
+          </li>
+          {% else %}
+          <li>No notebooks yet.</li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="{{ url_for('notebook.create_notebook') }}">
+          <input type="text" name="title" placeholder="New notebook title">
+          <label><input type="checkbox" name="is_shared"> Shared?</label>
+          <button type="submit" class="btn">Create notebook</button>
+        </form>
+      </section>
 
-  <footer>
-    &copy; 2025 NoteBridge. All rights reserved.
-  </footer>
+      <section>
+        <h2>Groups</h2>
+        <ul>
+          {% for g in groups %}
+          <li>
+            <strong>{{ g['name'] }}</strong> ({{ g['members'] }} members)
+            <a href="{{ url_for('group.view_group', group_id=g['id']) }}" class="btn">View</a>
+            <a href="{{ url_for('group.edit_group', group_id=g['id']) }}" class="btn">Edit</a>
+            <form method="post" action="{{ url_for('group.delete_group', group_id=g['id']) }}" class="inline-form">
+              <button type="submit" class="btn" style="background:#e74c3c;">Delete</button>
+            </form>
+          </li>
+          {% else %}
+          <li>No groups yet.</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 NoteBridge. All rights reserved.</p>
+    </footer>
+  </div>
 
   <script>
-    // Accessibility
-    function changeFontSize(sizeClass) {
-      document.body.classList.remove('font-small', 'font-medium', 'font-large');
-      document.body.classList.add(sizeClass);
-      announce(`Font size changed to ${sizeClass.replace('font-', '')}`);
+    const speech = window.speechSynthesis;
+    let rec = null;
+
+    function speak(text) {
+      if (speech.speaking || speech.pending) speech.cancel();
+      const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; speech.speak(msg);
+    }
+
+    function changeFontSize(size) {
+      const c = document.getElementById('main-content');
+      c.classList.remove('font-small', 'font-medium', 'font-large');
+      c.classList.add(size);
+      speak(`Font size changed to ${size.replace('font-', '')}`);
     }
 
     function toggleContrast(enabled) {
       document.body.classList.toggle('high-contrast', enabled);
-      announce(enabled ? "High contrast enabled" : "High contrast disabled");
+      speak(`High contrast ${enabled ? 'enabled' : 'disabled'}`);
     }
 
-    function announce(msg) {
-      const utterance = new SpeechSynthesisUtterance(msg);
-      speechSynthesis.speak(utterance);
-    }
-
-    // Notebook Search
-    function filterNotes() {
-      const query = document.getElementById('search-notes').value.toLowerCase();
-      const notes = document.getElementById('notebook-list').getElementsByTagName('li');
-      let count = 0;
-      for (let note of notes) {
-        if (note.textContent.toLowerCase().includes(query)) {
-          note.style.display = '';
-          count++;
-        } else {
-          note.style.display = 'none';
-        }
-      }
-      document.getElementById('search-status').textContent = `${count} notes found`;
-    }
-
-    // TTS for single note
-    function playNote(notebookId) {
-      fetch(`/get_notes_text/${notebookId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.notes_text) return announce("No notes to read!");
-          stopNote();
-          const utterance = new SpeechSynthesisUtterance(data.notes_text);
-          utterance.rate = 1;
-          utterance.pitch = 1;
-          speechSynthesis.speak(utterance);
-          announce(`Reading ${data.title}`);
-        });
-    }
-
-    function stopNote() {
-      if (speechSynthesis.speaking) speechSynthesis.cancel();
-    }
-
-    // Read full dashboard
     function readDashboard() {
-      fetch('/get_dashboard_text')
-        .then(res => res.json())
-        .then(data => {
-          stopNote();
-          const utterance = new SpeechSynthesisUtterance(data.dashboard_text);
-          utterance.rate = 1;
-          utterance.pitch = 1;
-          speechSynthesis.speak(utterance);
-        });
+      const text = document.getElementById('main-content').innerText.trim();
+      if (!text) speak("Dashboard is empty.");
+      else speak(text);
     }
 
-    // Group Members Form
-    function addMember() {
-      const container = document.getElementById('members-container');
-      const entry = document.createElement('div');
-      entry.className = 'member-entry';
-      entry.innerHTML = `
-        <input type="text" name="member_name[]" placeholder="Name" required>
-        <input type="text" name="member_id[]" placeholder="Student ID" required>
-        <input type="text" name="member_course[]" placeholder="Course/Project" required>
-        <button type="button" onclick="removeMember(this)">Remove</button>
-      `;
-      container.appendChild(entry);
+    function handleCommand(cmd) {
+      cmd = cmd.toLowerCase().trim();
+      const words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+      for (const w in words) cmd = cmd.replace(`notebook ${w}`, `notebook ${words[w]}`);
+      if (cmd.includes('dashboard') || cmd.includes('go to dashboard') || cmd.includes('back')) window.location.href = '{{ url_for("dashboard.dashboard") }}';
+      else if (cmd.includes('create notebook') || cmd.includes('new notebook')) window.location.href = '/notebook/create';
+      else if (cmd.includes('view groups') || cmd.includes('open groups')) window.location.href = '/groups';
+      else if (cmd.includes('logout') || cmd.includes('sign out')) window.location.href = '{{ url_for("auth.logout") }}';
+      else if (cmd.includes('increase font') || cmd.includes('large text')) changeFontSize('font-large');
+      else if (cmd.includes('decrease font') || cmd.includes('small text')) changeFontSize('font-small');
+      else if (cmd.includes('normal font')) changeFontSize('font-medium');
+      else if (cmd.includes('enable high contrast')) { document.getElementById('contrast-toggle').checked = true; toggleContrast(true); }
+      else if (cmd.includes('disable high contrast')) { document.getElementById('contrast-toggle').checked = false; toggleContrast(false); }
+      else if (cmd.includes('read page') || cmd.includes('read dashboard')) readDashboard();
+      else if (cmd.match(/(open|view) notebook/)) { const m = cmd.match(/notebook (\d+)/); if (m) { const nb = parseInt(m[1]); const links = document.querySelectorAll('#notebook-list li a'); if (links[nb - 1]) window.location.href = links[nb - 1].href; } }
     }
 
-    function removeMember(btn) { btn.parentElement.remove(); }
-
-    // Advanced Voice Commands
-    let recognition;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = function (event) {
-        const command = event.results[0][0].transcript.toLowerCase();
-        handleVoiceCommand(command);
-      }
-
-      recognition.onerror = function (event) {
-        announce("Voice command error: " + event.error);
-      }
-
-      function startVoiceCommand() {
-        announce("Listening for voice commands...");
-        recognition.start();
-      }
-    } else {
-      announce("Voice commands are not supported in this browser.");
+    function startVoiceRecognition() {
+      if (!('webkitSpeechRecognition' in window)) { alert("Use Chrome for voice recognition."); return; }
+      if (rec) { rec.stop(); rec = null; }
+      rec = new webkitSpeechRecognition();
+      rec.lang = 'en-US';
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.onresult = e => { const t = e.results[e.results.length - 1][0].transcript; handleCommand(t); };
+      rec.onerror = e => { console.error("Speech error:", e.error); };
+      rec.onend = () => { setTimeout(() => startVoiceRecognition(), 2000); };
+      rec.start();
     }
 
-    function handleVoiceCommand(command) {
-      announce(`You said: ${command}`);
-
-      if (command.startsWith("open notebook")) {
-        const name = command.replace("open notebook", "").trim();
-        const links = document.querySelectorAll("#notebook-list a");
-        for (let link of links) {
-          if (link.textContent.toLowerCase() === name.toLowerCase()) {
-            link.focus();
-            link.click();
-            announce(`Opening notebook ${link.textContent}`);
-            return;
-          }
-        }
-        announce(`Notebook ${name} not found`);
-        return;
-      }
-
-      if (command.includes("read notebooks")) {
-        readDashboardSection('notebook');
-        return;
-      }
-
-      if (command.includes("read groups")) {
-        readDashboardSection('group');
-        return;
-      }
-
-      if (command.startsWith("create notebook")) {
-        const title = command.replace("create notebook", "").trim();
-        document.querySelector('input[name="title"]').value = title;
-        announce(`Created notebook titled ${title}`);
-        return;
-      }
-
-      announce("Command not recognized. Try: 'Open notebook', 'Read notebooks', 'Read groups', 'Create notebook <title>'");
-    }
-
-    function readDashboardSection(section) {
-      stopNote();
-      let text = '';
-      if (section === 'notebook') {
-        const notes = document.querySelectorAll("#notebook-list li a");
-        if (notes.length === 0) return announce("No notebooks to read");
-        notes.forEach(n => text += n.textContent + ". ");
-      } else if (section === 'group') {
-        const groups = document.querySelectorAll("section[aria-label='Groups'] ul li strong");
-        if (groups.length === 0) return announce("No groups to read");
-        groups.forEach(g => text += g.textContent + ". ");
-      }
-      const utterance = new SpeechSynthesisUtterance(text);
-      speechSynthesis.speak(utterance);
-    }
+    window.addEventListener('DOMContentLoaded', () => startVoiceRecognition());
   </script>
 </body>
 

@@ -3,24 +3,102 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Group - {{ group['name'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ group['name'] if group else 'All Groups' }}</title>
     <style>
-        body.high-contrast {
-            background-color: #000;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        header {
+            background-color: #ca2525cc;
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        header div {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        nav a {
+            text-decoration: none;
+            padding: 8px 15px;
+            background-color: #4f9cf9;
+            color: #fff;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #357ae8;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        p {
+            margin: 5px 0 15px 0;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            cursor: pointer;
+            margin: 2px;
+            border: none;
+            border-radius: 6px;
+            background-color: #4f9cf9;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #357ae8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4f9cf9;
             color: #fff;
         }
 
-        .font-small {
-            font-size: 14px;
-        }
-
-        .font-medium {
-            font-size: 18px;
-        }
-
-        .font-large {
-            font-size: 22px;
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
         }
 
         ul {
@@ -29,138 +107,152 @@
         }
 
         li {
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #fff;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
         }
 
-        .btn {
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-left: 5px;
+        li:hover {
+            transform: translateY(-3px);
         }
 
-        header,
-        section,
-        footer {
-            margin-bottom: 20px;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        header img.logo {
-            height: 50px;
-            margin-right: 15px;
-        }
-
-        header .welcome {
-            font-size: 18px;
-            margin-left: 10px;
+        form {
+            display: inline;
         }
 
         footer {
             text-align: center;
-            font-size: 14px;
-            color: #888;
-            margin-top: 30px;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
+            padding: 20px 15px;
+            background-color: #ffffffcc;
+            backdrop-filter: blur(10px);
+            margin-top: 40px;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
+        @media (max-width: 768px) {
 
-        table th,
-        table td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+            }
 
-        table th {
-            background-color: #f2f2f2;
-        }
+            th {
+                display: none;
+            }
 
-        .actions {
-            display: flex;
-            gap: 5px;
+            td {
+                padding: 10px;
+                text-align: right;
+                position: relative;
+            }
+
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 50%;
+                font-weight: bold;
+                text-align: left;
+            }
+
+            nav {
+                flex-direction: column;
+            }
+
+            header {
+                padding: 15px;
+            }
         }
     </style>
 </head>
 
-<body class="font-medium">
-
+<body>
     <header>
-        <div style="display:flex; align-items:center;">
-            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="NoteBridge Logo" class="logo">
-            <div class="welcome">Welcome, {{ user['full_name'] or user['username'] }}!</div>
-        </div>
+        <div>Welcome, {{ user['full_name'] or user['username'] }}!</div>
         <nav>
-            <a href="{{ url_for('dashboard.dashboard') }}" class="btn">Dashboard</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn">Logout</a>
+            <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
         </nav>
     </header>
-
     <main>
-        <section>
-            <h2>Group: {{ group['name'] }}</h2>
-            <p><strong>Description:</strong> {{ group['description'] or 'No description' }}</p>
-            <p><strong>Created At:</strong> {{ group['created_at'] }}</p>
-
-            <div class="actions">
-                <a href="{{ url_for('group.edit_group', group_id=group['id']) }}" class="btn">Edit Group</a>
-                <form method="POST" action="{{ url_for('group.delete_group', group_id=group['id']) }}"
-                    style="display:inline" onsubmit="return confirm('Are you sure you want to delete this group?');">
-                    <button type="submit" class="btn">Delete Group</button>
-                </form>
-            </div>
-
-            <h3>Members</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in members %}
-                    <tr>
-                        <td>{{ m['username'] }}</td>
-                        <td>{{ m['full_name'] }}</td>
-                        <td>{{ 'Owner' if m['user_id'] == user['id'] else 'Member' }}</td>
-                        <td>
-                            {% if m['user_id'] != user['id'] %}
-                            <form method="POST"
-                                action="{{ url_for('group.remove_member', group_id=group['id'], user_id=m['user_id']) }}"
-                                style="display:inline" onsubmit="return confirm('Remove this member?');">
-                                <button type="submit" class="btn">Remove</button>
-                            </form>
-                            {% else %}
-                            —
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+        {% if group %}
+        <h2>Group: {{ group['name'] }}</h2>
+        <p><strong>Description:</strong> {{ group['description'] or 'No description' }}</p>
+        <p><strong>Created At:</strong> {{ group['created_at'] }}</p>
+        <a href="{{ url_for('group.edit_group', group_id=group['id']) }}" class="btn">Edit Group</a>
+        <form method="POST" action="{{ url_for('group.delete_group', group_id=group['id']) }}">
+            <button type="submit" class="btn">Delete Group</button>
+        </form>
+        <h3>Members</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr>
+                    <td data-label="Username">{{ m['username'] }}</td>
+                    <td data-label="Full Name">{{ m['full_name'] }}</td>
+                    <td data-label="Role">{{ 'Owner' if m['user_id'] == user['id'] else 'Member' }}</td>
+                    <td data-label="Actions">
+                        {% if m['user_id'] != user['id'] %}
+                        <form method="POST"
+                            action="{{ url_for('group.remove_member', group_id=group['id'], user_id=m['user_id']) }}">
+                            <button type="submit" class="btn">Remove</button>
+                        </form>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% elif groups %}
+        <h2>All Groups</h2>
+        <ul>
+            {% for g in groups %}
+            <li>
+                <a href="{{ url_for('group.view_group', group_id=g['id']) }}">{{ g['name'] }}</a>
+                ({{ g['members'] }} members)
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No groups available.</p>
+        {% endif %}
     </main>
-
     <footer>
         &copy; 2025 NoteBridge. All rights reserved.
     </footer>
 
+    <script>
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (window.SpeechRecognition) {
+            const recognition = new window.SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.onresult = function (event) {
+                const last = event.results.length - 1;
+                const command = event.results[last][0].transcript.trim().toLowerCase();
+                if (command.includes('dashboard') || command.includes('go to dashboard') || command.includes('back')) {
+                    window.location.href = "{{ url_for('dashboard.dashboard') }}";
+                }
+            };
+            recognition.start();
+        }
+    </script>
 </body>
 
 </html>
