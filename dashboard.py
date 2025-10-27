@@ -3,7 +3,7 @@ from auth import login_required, current_user
 from database import get_db
 
 dashboard_bp = Blueprint('dashboard', __name__)
-
+# Dashboard route
 @dashboard_bp.route('/dashboard')
 @login_required
 def dashboard():

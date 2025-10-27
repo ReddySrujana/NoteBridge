@@ -1,0 +1,220 @@
+---
+title: "s352-ps7"
+output: html_document
+date: "2025-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1: MLE Analysis of Women's Heights
+
+```{r}
+
+# 1(a)
+heights <- scan("womensheights.txt")  
+negloglik <- function(params, data) {
+  mu <- params[1]
+  sigma2 <- params[2]
+  n <- length(data)
+  n/2*log(2*pi*sigma2) + sum((data - mu)^2)/(2*sigma2)
+}
+
+init <- c(mu = mean(heights), sigma2 = var(heights))
+
+mle <- optim(par = init, fn = negloglik, data = heights, method = "L-BFGS-B",
+             lower = c(-Inf, 0.0001)) 
+
+mu_hat <- mle$par[1]
+sigma2_hat <- mle$par[2]
+
+cat("1(a) MLEs:\n")
+cat("mu_hat =", mu_hat, "\n")        
+cat("sigma2_hat =", sigma2_hat, "\n\n")  
+```
+```{r}
+# 1(b) 
+
+library(numDeriv)
+hess <- hessian(func = negloglik, x = mle$par, data = heights)
+var_matrix <- solve(hess)
+
+cat("1(b) Estimated Variance-Covariance Matrix:\n")
+print(var_matrix)
+cat("\n")
+```
+```{r}
+# 1(c) 
+
+se <- sqrt(diag(var_matrix))
+se_mu <- se[1]
+se_sigma2 <- se[2]
+
+cat("1(c) Standard Errors:\n")
+cat("SE(mu_hat) =", se_mu, "\n")          
+cat("SE(sigma2_hat) =", se_sigma2, "\n\n")  
+```
+```{r}
+# 1(d)
+
+z <- qnorm(0.995)  
+CI_mu <- mu_hat + c(-1,1) * z * se_mu
+
+cat("1(d) 99% Wald CI for mu:\n")
+cat("[", CI_mu[1], ",", CI_mu[2], "]\n\n")
+```
+```{r}
+# 1(e) 
+
+CI_sigma2 <- sigma2_hat + c(-1,1) * z * se_sigma2
+
+cat("1(e) 99% Wald CI for sigma^2:\n")
+cat("[", CI_sigma2[1], ",", CI_sigma2[2], "]\n\n")
+```
+
+```{r}
+
+# 1(f) 
+
+CI_sigma <- sqrt(CI_sigma2)
+
+cat("1(f) 99% Wald CI for sigma:\n")
+cat("[", CI_sigma[1], ",", CI_sigma[2], "]\n\n")
+
+```
+```{r}
+# 1(g)
+
+mu0 <- 161.3
+z_stat <- (mu_hat - mu0) / se_mu
+p_value <- 2 * (1 - pnorm(abs(z_stat)))
+
+cat("1(g) Wald Test for mu = 161.3:\n")
+cat("Wald z-statistic =", z_stat, "\n")
+cat("P-value =", p_value, "\n")
+```
+# Question 2
+
+```{r}
+data(faithful)
+eruption <- faithful$eruptions
+
+negloglik_mix <- function(params, data) {
+  p <- params[1]       
+  mu1 <- params[2]
+  sigma1 <- params[3]
+  mu2 <- params[4]
+  sigma2 <- params[5]
+  
+  if(sigma1 <= 0 || sigma2 <= 0 || p <= 0 || p >= 1) return(1e10)
+  
+  ll <- p*dnorm(data, mean=mu1, sd=sigma1) + (1-p)*dnorm(data, mean=mu2, sd=sigma2)
+  -sum(log(ll))
+}
+
+hist(eruption, breaks=30, main="Eruption Times Histogram", xlab="Minutes")
+init <- c(p=0.5, mu1=2, sigma1=0.3, mu2=4.5, sigma2=0.5)
+
+mle_mix <- optim(par=init, fn=negloglik_mix, data=eruption, method="L-BFGS-B",
+                 lower=c(0.0001, -Inf, 0.0001, -Inf, 0.0001),
+                 upper=c(0.9999, Inf, Inf, Inf, Inf))
+
+# Extract MLEs  
+
+p_hat <- mle_mix$par[1]
+mu1_hat <- mle_mix$par[2]
+sigma1_hat <- mle_mix$par[3]
+mu2_hat <- mle_mix$par[4]
+sigma2_hat <- mle_mix$par[5]
+
+cat("2(a) MLEs for two-Normal mixture:\n")
+cat("p_hat =", p_hat, "\n")
+cat("mu1_hat =", mu1_hat, ", sigma1_hat =", sigma1_hat, "\n")
+cat("mu2_hat =", mu2_hat, ", sigma2_hat =", sigma2_hat, "\n\n")
+
+library(numDeriv)
+hess_mix <- hessian(func=negloglik_mix, x=mle_mix$par, data=eruption)
+var_matrix_mix <- solve(hess_mix)
+se_mix <- sqrt(diag(var_matrix_mix))
+
+cat("Standard errors:\n")
+cat("SE(p_hat) =", se_mix[1], "\n")
+cat("SE(mu1_hat) =", se_mix[2], ", SE(sigma1_hat) =", se_mix[3], "\n")
+cat("SE(mu2_hat) =", se_mix[4], ", SE(sigma2_hat) =", se_mix[5], "\n\n")
+
+
+z95 <- qnorm(0.975)
+CI_p <- p_hat + c(-1,1) * z95 * se_mix[1]
+CI_mu1 <- mu1_hat + c(-1,1) * z95 * se_mix[2]
+CI_sigma1 <- sigma1_hat + c(-1,1) * z95 * se_mix[3]
+CI_mu2 <- mu2_hat + c(-1,1) * z95 * se_mix[4]
+CI_sigma2 <- sigma2_hat + c(-1,1) * z95 * se_mix[5]
+
+cat("95% Confidence Intervals:\n")
+cat("p_hat: [", CI_p[1], ",", CI_p[2], "]\n")
+cat("mu1_hat: [", CI_mu1[1], ",", CI_mu1[2], "], sigma1_hat: [", CI_sigma1[1], ",", CI_sigma1[2], "]\n")
+cat("mu2_hat: [", CI_mu2[1], ",", CI_mu2[2], "], sigma2_hat: [", CI_sigma2[1], ",", CI_sigma2[2], "]\n\n")
+
+
+```
+```{r}
+# 2(b) 
+
+p0 <- 0.5
+z_stat <- (p_hat - p0) / se_mix[1]
+p_value <- 2*(1 - pnorm(abs(z_stat)))
+
+cat("2(b) Wald Test for p = 0.5:\n")
+cat("Wald z-statistic =", z_stat, "\n")
+cat("P-value =", p_value, "\n")
+```
+
+# Question 3: Hurricane Deaths Model Fitting
+
+```{r}
+library(MASS)      
+library(pscl)  
+hurricanes <- read.csv("hurricanes.csv")
+deaths <- hurricanes$alldeaths
+
+poisson_model <- glm(deaths ~ 1, family = poisson)
+summary(poisson_model)
+lambda_hat <- exp(coef(poisson_model))
+cat("3(a) Poisson model lambda_hat =", lambda_hat, "\n\n")
+
+```
+```{r}
+# 3(b) 
+nb_model <- glm.nb(deaths ~ 1)
+summary(nb_model)
+mu_hat <- exp(coef(nb_model))        
+theta_hat <- nb_model$theta          
+cat("3(b) Negative Binomial model:\n")
+cat("mu_hat =", mu_hat, ", theta_hat =", theta_hat, "\n\n")
+
+```
+```{r}
+
+zip_model <- zeroinfl(deaths ~ 1 | 1, dist = "poisson")
+summary(zip_model)
+
+zip_coef <- coef(zip_model)
+zip_lambda <- exp(zip_coef["count_(Intercept)"])  
+zip_pi     <- plogis(zip_coef["zero_(Intercept)"])
+
+cat("3(c) ZIP model:\n")
+cat("lambda_hat =", zip_lambda, ", pi_hat =", zip_pi, "\n\n")
+```
+```{r}
+zinb_model <- zeroinfl(deaths ~ 1 | 1, dist = "negbin")
+summary(zinb_model)
+zinb_coef <- coef(zinb_model)
+zinb_mu    <- exp(zinb_coef["count_(Intercept)"])  
+zinb_theta <- zinb_model$theta                       
+zinb_pi    <- plogis(zinb_coef["zero_(Intercept)"])
+
+cat("3(d) ZINB model:\n")
+cat("mu_hat =", zinb_mu, ", theta_hat =", zinb_theta, ", pi_hat =", zinb_pi, "\n")
+```
+

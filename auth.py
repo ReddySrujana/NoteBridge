@@ -5,7 +5,7 @@ import datetime
 from functools import wraps
 
 auth_bp = Blueprint('auth', __name__, template_folder='templates')
-
+# definitions for login_required and current_user
 def current_user():
     uid = session.get('user_id')
     if not uid:
