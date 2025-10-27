@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>{{ note['title'] }} - Note</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
     body {
@@ -11,11 +11,11 @@
       font-family: 'Segoe UI', sans-serif;
       display: flex;
       background: #f4f6f9;
-      color: #333;
+      color: #2c3e50;
     }
 
     .sidebar {
-      width: 230px;
+      width: 240px;
       background: linear-gradient(180deg, #2c3e50, #34495e);
       color: #ecf0f1;
       height: 100vh;
@@ -29,26 +29,24 @@
     }
 
     .sidebar h2 {
-      margin-bottom: 25px;
       text-align: center;
+      margin-bottom: 25px;
       font-size: 1.3rem;
-      letter-spacing: 1px;
     }
 
     .sidebar a,
     .sidebar button {
       display: block;
-      color: #ecf0f1;
-      text-decoration: none;
       background: none;
       border: none;
+      color: #ecf0f1;
       text-align: left;
-      padding: 12px 15px;
-      margin: 5px 0;
+      padding: 10px 15px;
+      margin: 6px 0;
       border-radius: 8px;
-      transition: background 0.3s;
       cursor: pointer;
       font-size: 15px;
+      transition: background 0.3s;
     }
 
     .sidebar a:hover,
@@ -57,34 +55,21 @@
     }
 
     .main-content {
-      margin-left: 250px;
+      margin-left: 260px;
       padding: 30px;
       flex: 1;
     }
 
-    pre {
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    textarea {
-      width: 100%;
-      height: 200px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-top: 10px;
-      font-family: monospace;
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      color: #34495e;
     }
 
     .top-buttons {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 20px;
     }
 
@@ -95,22 +80,96 @@
       padding: 10px 16px;
       border-radius: 6px;
       cursor: pointer;
-      transition: background 0.3s;
+      font-weight: 500;
+      transition: all 0.3s;
     }
 
     .btn:hover {
       background: #1f6391;
+      transform: translateY(-1px);
     }
 
     .btn-danger {
       background: #e74c3c;
     }
 
+    pre {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      background: #3498db;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 14px;
+    }
+
+    .comment {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .reply {
+      margin-left: 25px;
+      background: #eef2f5;
+    }
+
+    .comment-actions {
+      margin-top: 5px;
+    }
+
+    .comment-actions button {
+      background: none;
+      border: none;
+      color: #2980b9;
+      cursor: pointer;
+      font-size: 13px;
+      margin-right: 5px;
+    }
+
+    .comment-actions button:hover {
+      text-decoration: underline;
+    }
+
     footer {
-      text-align: center;
       margin-top: 40px;
+      text-align: center;
+      color: #777;
       font-size: 0.9rem;
-      color: #666;
     }
   </style>
 </head>
@@ -132,7 +191,6 @@
       <button id="dictate-btn" class="btn">Start Dictation</button>
       <button id="read-page-btn" class="btn">Read Page</button>
       <button id="clear-btn" class="btn">Clear</button>
-      <button id="voice-assistant-btn" class="btn">Enable Voice Commands</button>
       <button id="stop-voice-btn" class="btn btn-danger">Stop Voice</button>
     </div>
 
@@ -145,183 +203,82 @@
       <textarea id="editor">{{ note['content'] }}</textarea>
     </section>
 
+    <section>
+      <h2>Tags</h2>
+      <div class="tag-list" id="tag-list">
+        {% for t in tags %}
+        <span class="tag">{{ t['tag'] }}</span>
+        {% else %}
+        <p>No tags yet.</p>
+        {% endfor %}
+      </div>
+      <form id="add-tag-form">
+        <input type="text" id="new-tag" placeholder="Add new tag...">
+        <button type="submit" class="btn">Add</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Comments</h2>
+      <div id="comment-section">
+        {% for c in comments %}
+        <div class="comment" data-id="{{ c['id'] }}" data-parent="{{ c['parent_id'] or '' }}">
+          <strong>{{ c['username'] or 'Anonymous' }}:</strong>
+          <p class="comment-text">{{ c['content'] }}</p>
+          <small>{{ c['timestamp'] }}</small>
+          <div class="comment-actions">
+            <button class="reply-btn">Reply</button>
+            {% if c['user_id'] == current_user['id'] %}
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p>No comments yet.</p>
+        {% endfor %}
+      </div>
+      <form id="comment-form">
+        <textarea id="comment-text" placeholder="Add a comment..."></textarea>
+        <button type="submit" class="btn">Post Comment</button>
+      </form>
+    </section>
+    <section aria-label="Audio Playback Controls">
+      <h2>Audio Playback Controls</h2>
+      <div id="audio-controls" style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn" id="play-btn" aria-label="Play Audio" accesskey="p">▶️ Play</button>
+        <button class="btn" id="pause-btn" aria-label="Pause Audio" accesskey="u">⏸️ Pause</button>
+        <button class="btn" id="stop-btn" aria-label="Stop Audio" accesskey="s">⏹️ Stop</button>
+        <button class="btn" id="rewind-btn" aria-label="Rewind Audio" accesskey="r">⏪ Rewind 10s</button>
+        <label for="speed-control" style="margin-left:10px;">Speed:</label>
+        <select id="speed-control" aria-label="Playback Speed">
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
+      <audio id="audio-player" src="/static/sample.mp3" preload="auto"></audio>
+    </section>
+
     <footer>
       <p>&copy; {{ current_year or 2025 }} NoteBridge</p>
     </footer>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const socket = io();
-      const noteId = {{ note['id'] | tojson
-    }};
-    const notebookId = {{ note['notebook_id'] | tojson }};
-    const noteTitle = {{ note['title'] | tojson }};
+<script>
+  window.noteData = {
+    noteId: {{ note['id'] | tojson }},
+    notebookId: {{ note['notebook_id'] | tojson }},
+    noteTitle: {{ note['title'] | tojson }},
+    dashboardUrl: "{{ url_for('dashboard.dashboard') }}",
+    logoutUrl: "{{ url_for('auth.logout') }}"
+  };
+</script>
 
-    const editor = document.getElementById('editor');
-    const noteContent = document.getElementById('note-content');
-    const saveBtn = document.getElementById('save-btn');
-    const clearBtn = document.getElementById('clear-btn');
-    const deleteBtn = document.getElementById('delete-note-btn');
-    const dictateBtn = document.getElementById('dictate-btn');
-    const readBtn = document.getElementById('read-page-btn');
-    const voiceBtn = document.getElementById('voice-assistant-btn');
-    const stopVoiceBtn = document.getElementById('stop-voice-btn');
-    const synth = window.speechSynthesis;
+<script src="{{ url_for('static', filename='js/note_page.js') }}"></script>
 
-    socket.emit('join_note', { note_id: noteId });
-
-    function speak(text) {
-      if (!window.speechSynthesis) return;
-      const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = 'en-US';
-      synth.speak(msg);
-    }
-
-    // Save
-    saveBtn.addEventListener('click', async () => {
-      const content = editor.value;
-      try {
-        const res = await fetch(`/note/${noteId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: noteTitle, content })
-        });
-        if (res.ok) {
-          noteContent.innerHTML = `<pre>${content}</pre>`;
-          socket.emit('edit', { note_id: noteId, content, title: noteTitle });
-          speak("Note saved successfully.");
-        } else speak("Failed to save note.");
-      } catch (e) { console.error(e); }
-    });
-
-    // Clear
-    clearBtn.addEventListener('click', () => {
-      editor.value = '';
-      speak("Note cleared.");
-    });
-
-    // Delete
-    deleteBtn.addEventListener('click', async () => {
-      if (!confirm("Are you sure?")) return;
-      const res = await fetch(`/note/${noteId}`, { method: 'DELETE' });
-      if (res.ok) {
-        speak("Note deleted.");
-        window.location.href = `/notebook/${notebookId}`;
-      } else speak("Delete failed.");
-    });
-
-    // Read Page
-    readBtn.addEventListener('click', () => {
-      const text = editor.value.trim() || {{ note['content'] | tojson
-    }};
-    if (!text) return speak("This note is empty.");
-    if (synth.speaking) synth.cancel();
-    speak(text);
-      });
-
-    // Stop Voice
-    stopVoiceBtn.addEventListener('click', () => {
-      synth.cancel();
-      speak("Speech stopped.");
-    });
-
-    // Dictation
-    let dictating = false;
-    let dictation;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      dictation = new SpeechRecognition();
-      dictation.continuous = true;
-      dictation.interimResults = false;
-      dictation.lang = 'en-US';
-
-      dictateBtn.addEventListener('click', () => {
-        if (!dictating) dictation.start();
-        else dictation.stop();
-      });
-
-      dictation.onstart = () => {
-        dictating = true;
-        dictateBtn.textContent = "Stop Dictation";
-        speak("Dictation started.");
-      };
-      dictation.onend = () => {
-        dictating = false;
-        dictateBtn.textContent = "Start Dictation";
-        speak("Dictation stopped.");
-      };
-      dictation.onresult = (event) => {
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            const transcript = event.results[i][0].transcript.trim();
-            editor.value += (editor.value ? ' ' : '') + transcript;
-            socket.emit('edit', { note_id: noteId, content: editor.value, title: noteTitle });
-          }
-        }
-      };
-    }
-
-    // Voice Assistant
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const assistant = new SpeechRecognition();
-      assistant.continuous = true;
-      assistant.interimResults = false;
-      assistant.lang = 'en-US';
-
-      assistant.onresult = async (event) => {
-        const transcript = Array.from(event.results)
-          .map(r => r[0].transcript.toLowerCase().trim())
-          .join(' ');
-
-        const normalize = (text) => text
-          .replace(/summarise|summerize|summary|summer rise|summery/gi, "summarize")
-          .replace(/note\s?book|not book|noot book|note buck/gi, "notebook")
-          .trim();
-
-        const fixedTranscript = normalize(transcript);
-
-        if (fixedTranscript.includes("introduction")) speak("Welcome to this note.");
-        else if (fixedTranscript.includes("save")) saveBtn.click();
-        else if (fixedTranscript.includes("start dictation")) {
-          if (!dictating) dictation.start();
-          speak("Dictation started.");
-        }
-        else if (fixedTranscript.includes("read page")) readBtn.click();
-        else if (fixedTranscript.includes("clear")) clearBtn.click();
-        else if (fixedTranscript.includes("enable voice commands")) speak("Voice assistant enabled.");
-        else if (fixedTranscript.includes("stop voice")) {
-          window.speechSynthesis.cancel();
-          speak("Speech stopped.");
-        }
-        else if (fixedTranscript.includes("summarize notebook")) {
-          speak("Summarizing notebook, please wait.");
-          try {
-            const res = await fetch(`/notebook/${notebookId}/summarize`);
-            const data = await res.json();
-            const summary = data.summary || "No summary available.";
-            alert("Notebook Summary:\n\n" + summary);
-            speak(summary);
-          } catch {
-            speak("Failed to summarize notebook.");
-          }
-        }
-        else if (fixedTranscript.includes("go back") || fixedTranscript.includes("back to dashboard")) {
-          speak("Returning to dashboard.");
-          window.location.href = "{{ url_for('dashboard.dashboard') }}";
-        }
-        else {
-          editor.value += ' ' + transcript;
-        }
-      };
-
-      assistant.onerror = (e) => console.error("Voice assistant error:", e.error);
-      assistant.onend = () => assistant.start();
-      assistant.start();
-    }
-    });
-  </script>
 </body>
 
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Help - NoteBridge</title>
@@ -13,6 +14,7 @@
       flex-direction: column;
       min-height: 100vh;
     }
+
     .sidebar {
       width: 250px;
       background: linear-gradient(180deg, #2c3e50, #34495e);
@@ -82,7 +84,8 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 15px;
       border-bottom: 1px solid #e0e4e8;
       text-align: left;
@@ -105,11 +108,11 @@
       text-align: center;
       border-top: 4px solid #2980b9;
     }
-    
   </style>
 </head>
+
 <body>
-  <<div class="sidebar">
+  <div class="sidebar">
     <img src="{{ url_for('static', filename='logo.jpg') }}" alt="User Avatar">
     <h2>{{ user['full_name'] or user['username'] }}</h2>
     <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
@@ -191,5 +194,83 @@
   <footer>
     <p>&copy; 2025 NoteBridge. All rights reserved.</p>
   </footer>
+
+  <script>
+  const synth = window.speechSynthesis;
+  let rec = null;
+
+  function speak(text) {
+    if (synth.speaking || synth.pending) synth.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'en-US';
+    msg.rate = 1;
+    msg.pitch = 1;
+    synth.speak(msg);
+  }
+
+  function handleCommand(cmd) {
+    cmd = cmd.toLowerCase().trim();
+    console.log("🎤 Heard command:", cmd);
+
+    // === Go Back to Dashboard ===
+    if (cmd.includes('go back') || cmd.includes('dashboard')) {
+      console.log("🏠 Going back to Dashboard...");
+      speak("Returning to your dashboard.");
+      window.location.href = '{{ url_for("dashboard.dashboard") }}';
+      return;
+    }
+
+    // === Read All Commands ===
+    if (cmd.includes('read commands') || cmd.includes('list commands') || cmd === 'help') {
+      console.log("📖 Reading all available commands...");
+      const commandsText = document.querySelector('.main-content').innerText.replace(/\s+/g, ' ').trim();
+      speak("Here are all available voice commands. " + commandsText);
+      return;
+    }
+
+    // === Stop Reading ===
+    if (cmd.includes('stop reading') || cmd.includes('stop voice')) {
+      synth.cancel();
+      console.log("🛑 Stopped speaking.");
+      return;
+    }
+
+    console.log("❓ Unrecognized voice command:", cmd);
+  }
+
+  function startVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Please use Google Chrome for voice support.");
+      return;
+    }
+    if (rec) { rec.stop(); rec = null; }
+
+    rec = new webkitSpeechRecognition();
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = false;
+
+    rec.onresult = (e) => {
+      const text = e.results[e.results.length - 1][0].transcript;
+      handleCommand(text);
+    };
+
+    rec.onerror = (e) => console.error("Speech error:", e.error);
+    rec.onend = () => setTimeout(startVoiceRecognition, 1500);
+    rec.start();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // 🎧 Start listening
+    startVoiceRecognition();
+
+    // 🗣️ Play welcome voice message once page loads
+    setTimeout(() => {
+      speak("Welcome to NoteBridge Help page. Say read commands to hear the available commands.");
+    }, 1000);
+  });
+</script>
+
 </body>
+
 </html>

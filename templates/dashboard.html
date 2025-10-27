@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Dashboard - NoteBridge</title>
@@ -100,38 +101,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
-    #search-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    #searchInput {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
-    }
-
-    .btn {
-      background: #2980b9;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .btn:hover {
-      background: #1f6391;
-      transform: translateY(-2px);
-      box-shadow: 0 3px 10px rgba(41, 128, 185, 0.2);
-    }
-
     section {
       background: #fff;
       padding: 25px;
@@ -167,28 +136,21 @@
       transform: scale(1.01);
     }
 
-    li a {
-      color: #2c3e50;
-      text-decoration: none;
-      font-weight: 500;
+    .btn {
+      background: #2980b9;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
       cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
     }
 
-    li a:hover {
-      color: #2980b9;
-    }
-
-    form.inline-form {
-      display: inline;
-    }
-
-    footer {
-      margin-top: 40px;
-      padding: 30px 20px;
-      background: #2c3e50;
-      color: #ecf0f1;
-      text-align: center;
-      border-top: 4px solid #2980b9;
+    .btn:hover {
+      background: #1f6391;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 10px rgba(41, 128, 185, 0.2);
     }
 
     .font-small {
@@ -216,11 +178,29 @@
     .high-contrast .sidebar a {
       color: white;
     }
+
+    #activity-log {
+      max-height: 250px;
+      overflow-y: auto;
+      background: #f9fbfd;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .activity-entry {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.95rem;
+    }
+
+    .activity-entry:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 
 <body>
-  <div class="sidebar">
+  <div class="sidebar" role="navigation" aria-label="Main menu">
     <img src="{{ url_for('static', filename='logo.jpg') }}" alt="User Avatar">
     <h2>{{ user['full_name'] or user['username'] }}</h2>
     <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
@@ -232,6 +212,7 @@
   <div class="main-content" id="main-content">
     <header>
       <div class="welcome">Welcome, {{ user['full_name'] or user['username'] }}!</div>
+      <button class="btn" onclick="readDashboard()">🔊 Read Dashboard</button>
     </header>
 
     <div class="accessibility-controls">
@@ -243,55 +224,45 @@
       </select>
       <label for="contrast-toggle">High contrast:</label>
       <input type="checkbox" id="contrast-toggle" onchange="toggleContrast(this.checked)">
-      <button onclick="startVoiceRecognition()" class="btn">Voice command</button>
+      <button onclick="startVoiceRecognition()" class="btn">🎙️ Voice Commands</button>
+      <button onclick="fetchContributions()" class="btn">📜 View Activity</button>
     </div>
 
-    <main id="dashboard-content">
-      <section>
-        <h2>Your notebooks</h2>
-        <div id="search-container">
-          <input type="text" id="searchInput" placeholder="Search notebooks...">
-        </div>
+    <main id="dashboard-content" role="main">
+      <section aria-labelledby="notebooks-section">
+        <h2 id="notebooks-section">Your Notebooks</h2>
         <ul id="notebook-list">
           {% for nb in notebooks %}
           <li>
             <a href="{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}">{{ nb['title'] }}</a>
-            <div>
-              <button class="btn"
-                onclick="window.location.href='{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}'">Open</button>
-              <form method="post" action="{{ url_for('notebook.delete_notebook', notebook_id=nb['id']) }}"
-                class="inline-form" onsubmit="return confirm('Delete this notebook?')">
-                <button type="submit" class="btn" style="background:#e74c3c;">Delete</button>
-              </form>
-            </div>
+            <button class="btn"
+              onclick="window.location.href='{{ url_for('notebook.view_notebook', notebook_id=nb['id']) }}'">Open</button>
           </li>
           {% else %}
           <li>No notebooks yet.</li>
           {% endfor %}
         </ul>
-        <form method="post" action="{{ url_for('notebook.create_notebook') }}">
-          <input type="text" name="title" placeholder="New notebook title">
-          <label><input type="checkbox" name="is_shared"> Shared?</label>
-          <button type="submit" class="btn">Create notebook</button>
-        </form>
       </section>
 
-      <section>
-        <h2>Groups</h2>
+      <section aria-labelledby="groups-section">
+        <h2 id="groups-section">Groups</h2>
         <ul>
           {% for g in groups %}
           <li>
             <strong>{{ g['name'] }}</strong> ({{ g['members'] }} members)
             <a href="{{ url_for('group.view_group', group_id=g['id']) }}" class="btn">View</a>
-            <a href="{{ url_for('group.edit_group', group_id=g['id']) }}" class="btn">Edit</a>
-            <form method="post" action="{{ url_for('group.delete_group', group_id=g['id']) }}" class="inline-form">
-              <button type="submit" class="btn" style="background:#e74c3c;">Delete</button>
-            </form>
           </li>
           {% else %}
           <li>No groups yet.</li>
           {% endfor %}
         </ul>
+      </section>
+
+      <section aria-labelledby="activity-section">
+        <h2 id="activity-section">Recent Activity (Accessible Log)</h2>
+        <div id="activity-log" role="log" aria-live="polite">
+          <p>Loading recent activity...</p>
+        </div>
       </section>
     </main>
 
@@ -306,7 +277,9 @@
 
     function speak(text) {
       if (speech.speaking || speech.pending) speech.cancel();
-      const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; speech.speak(msg);
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-US';
+      speech.speak(msg);
     }
 
     function changeFontSize(size) {
@@ -321,6 +294,30 @@
       speak(`High contrast ${enabled ? 'enabled' : 'disabled'}`);
     }
 
+    async function fetchContributions() {
+      try {
+        const res = await fetch('/notebook/contributions');
+        const data = await res.json();
+        const log = document.getElementById('activity-log');
+        log.innerHTML = '';
+        if (!data.length) {
+          log.innerHTML = '<p>No recent activity.</p>';
+          speak("No recent activity found.");
+          return;
+        }
+        data.forEach(entry => {
+          const div = document.createElement('div');
+          div.classList.add('activity-entry');
+          div.innerText = `${entry.timestamp}: ${entry.username} ${entry.action} note "${entry.note_title}"`;
+          log.appendChild(div);
+        });
+        speak(`Loaded ${data.length} recent activities.`);
+      } catch (err) {
+        console.error(err);
+        // speak("Unable to fetch activity log.");
+      }
+    }
+
     function readDashboard() {
       const text = document.getElementById('main-content').innerText.trim();
       if (!text) speak("Dashboard is empty.");
@@ -329,35 +326,141 @@
 
     function handleCommand(cmd) {
       cmd = cmd.toLowerCase().trim();
+      console.log("🎤 Heard voice command:", cmd); // ✅ debug log
+
+      // Number word mapping
       const words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
       for (const w in words) cmd = cmd.replace(`notebook ${w}`, `notebook ${words[w]}`);
-      if (cmd.includes('dashboard') || cmd.includes('go to dashboard') || cmd.includes('back')) window.location.href = '{{ url_for("dashboard.dashboard") }}';
-      else if (cmd.includes('create notebook') || cmd.includes('new notebook')) window.location.href = '/notebook/create';
-      else if (cmd.includes('view groups') || cmd.includes('open groups')) window.location.href = '/groups';
-      else if (cmd.includes('logout') || cmd.includes('sign out')) window.location.href = '{{ url_for("auth.logout") }}';
-      else if (cmd.includes('increase font') || cmd.includes('large text')) changeFontSize('font-large');
-      else if (cmd.includes('decrease font') || cmd.includes('small text')) changeFontSize('font-small');
-      else if (cmd.includes('normal font')) changeFontSize('font-medium');
-      else if (cmd.includes('enable high contrast')) { document.getElementById('contrast-toggle').checked = true; toggleContrast(true); }
-      else if (cmd.includes('disable high contrast')) { document.getElementById('contrast-toggle').checked = false; toggleContrast(false); }
-      else if (cmd.includes('read page') || cmd.includes('read dashboard')) readDashboard();
-      else if (cmd.match(/(open|view) notebook/)) { const m = cmd.match(/notebook (\d+)/); if (m) { const nb = parseInt(m[1]); const links = document.querySelectorAll('#notebook-list li a'); if (links[nb - 1]) window.location.href = links[nb - 1].href; } }
+
+      // --- Navigation Commands ---
+      if (cmd.includes('dashboard') || cmd.includes('go back')) {
+        console.log("➡️ Voice command: Go to dashboard");
+        window.location.href = '{{ url_for("dashboard.dashboard") }}';
+        return;
+      }
+
+      // --- Create Notebook Commands ---
+      if (cmd.match(/(create|make|start)(.*)(notebook)/)) {
+        console.log("🆕 Voice command: Create Notebook detected");
+        speak("Opening notebook creation page.");
+        window.location.href = '/notebook/create';
+        return;
+      }
+
+      // --- Open Notebook X ---
+      const openMatch = cmd.match(/open notebook (\d+)/);
+      if (openMatch) {
+        const nb = parseInt(openMatch[1]);
+        console.log(`📖 Voice command: Open notebook #${nb}`);
+        const links = document.querySelectorAll('#notebook-list li a');
+        if (links[nb - 1]) {
+          speak(`Opening notebook number ${nb}`);
+          window.location.href = links[nb - 1].href;
+        } else {
+          speak("Notebook not found.");
+        }
+        return;
+      }
+
+      // --- View Groups ---
+      if (cmd.includes('view groups') || cmd.includes('open groups')) {
+        console.log("👥 Voice command: View Groups");
+        speak("Opening groups page.");
+        window.location.href = '/groups';
+        return;
+      }
+
+      // --- Read Activity ---
+      if (cmd.includes('read activity')) {
+        console.log("📜 Voice command: Read Activity Log");
+        fetchContributions();
+        return;
+      }
+
+      // --- Read Dashboard ---
+      if (cmd.includes('read dashboard')) {
+        console.log("📢 Voice command: Read Dashboard");
+        readDashboard();
+        return;
+      }
+
+      // --- Font Controls ---
+      if (cmd.includes('increase font') || cmd.includes('large text')) {
+        console.log("🔠 Voice command: Increase Font");
+        changeFontSize('font-large');
+        return;
+      }
+
+      if (cmd.includes('decrease font') || cmd.includes('small text')) {
+        console.log("🔡 Voice command: Decrease Font");
+        changeFontSize('font-small');
+        return;
+      }
+
+      if (cmd.includes('normal font')) {
+        console.log("🔤 Voice command: Normal Font");
+        changeFontSize('font-medium');
+        return;
+      }
+
+      // --- High Contrast ---
+      if (cmd.includes('enable high contrast')) {
+        console.log("🌗 Voice command: Enable High Contrast");
+        document.getElementById('contrast-toggle').checked = true;
+        toggleContrast(true);
+        return;
+      }
+
+      if (cmd.includes('disable high contrast')) {
+        console.log("🌖 Voice command: Disable High Contrast");
+        document.getElementById('contrast-toggle').checked = false;
+        toggleContrast(false);
+        return;
+      }
+
+      // --- Open Help Page ---
+      if (cmd.includes('help page') || cmd === 'help' || cmd.includes('open help')) {
+        console.log("🆘 Voice command: Open Help Page");
+        speak("Opening the Help page.");
+        window.location.href = '{{ url_for("help.help_page") }}';
+        return;
+      }
+
+      // --- Logout ---
+      if (cmd.includes('logout') || cmd.includes('sign out')) {
+        console.log("🚪 Voice command: Logout");
+        speak("Logging out.");
+        window.location.href = '{{ url_for("auth.logout") }}';
+        return;
+      }
+
+      console.log("❓ No matching voice command for:", cmd);
     }
 
     function startVoiceRecognition() {
-      if (!('webkitSpeechRecognition' in window)) { alert("Use Chrome for voice recognition."); return; }
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Please use Google Chrome for full voice support.");
+        return;
+      }
       if (rec) { rec.stop(); rec = null; }
       rec = new webkitSpeechRecognition();
       rec.lang = 'en-US';
       rec.continuous = true;
       rec.interimResults = false;
-      rec.onresult = e => { const t = e.results[e.results.length - 1][0].transcript; handleCommand(t); };
-      rec.onerror = e => { console.error("Speech error:", e.error); };
-      rec.onend = () => { setTimeout(() => startVoiceRecognition(), 2000); };
+      rec.onresult = e => {
+        const t = e.results[e.results.length - 1][0].transcript;
+        handleCommand(t);
+      };
+      rec.onerror = e => console.error("Speech error:", e.error);
+      rec.onend = () => setTimeout(startVoiceRecognition, 2000);
       rec.start();
+      // speak("Voice command mode activated. Say 'read dashboard' or 'create notebook'.");
     }
 
-    window.addEventListener('DOMContentLoaded', () => startVoiceRecognition());
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchContributions();
+      startVoiceRecognition();
+    });
   </script>
 </body>
 
