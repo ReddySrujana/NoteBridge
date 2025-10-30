@@ -362,7 +362,6 @@ def serve_summary_audio(notebook_id):
     print(f"[LOG] Serving summary.mp3 for notebook {notebook_id}")
     return send_file(file_path, mimetype='audio/mpeg', as_attachment=False)
 
-
 # 🔍 Search notes within all notebooks.
 @notebook_bp.route('/search_notebooks')
 @login_required
@@ -426,7 +425,6 @@ def add_comment(note_id):
     db.commit()
 
     return jsonify({'message': 'comment added'})
-
 # -----------------------------
 # Implementing Comment Editing & Deletion (Sprint 2 Enhancement)
 # -----------------------------
@@ -465,7 +463,7 @@ def update_comment(comment_id):
 
     return jsonify({'message': 'comment updated successfully'})
 
-
+# route for deleting a comment
 @notebook_bp.route('/comment/<int:comment_id>', methods=['DELETE'])
 @login_required
 def delete_comment(comment_id):
