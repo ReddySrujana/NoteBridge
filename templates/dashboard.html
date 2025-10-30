@@ -326,7 +326,7 @@
 
     function handleCommand(cmd) {
       cmd = cmd.toLowerCase().trim();
-      console.log("🎤 Heard voice command:", cmd); // ✅ debug log
+      console.log("🎤 Heard voice command:", cmd); // debug log
 
       // Number word mapping
       const words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
@@ -418,7 +418,7 @@
         return;
       }
 
-      // --- Open Help Page ---
+      // --- Open Help Page using voice command---
       if (cmd.includes('help page') || cmd === 'help' || cmd.includes('open help')) {
         console.log("🆘 Voice command: Open Help Page");
         speak("Opening the Help page.");
@@ -436,7 +436,7 @@
 
       console.log("❓ No matching voice command for:", cmd);
     }
-
+    // --- Voice Recognition Setup ---
     function startVoiceRecognition() {
       if (!('webkitSpeechRecognition' in window)) {
         alert("Please use Google Chrome for full voice support.");
@@ -456,7 +456,6 @@
       rec.start();
       // speak("Voice command mode activated. Say 'read dashboard' or 'create notebook'.");
     }
-
     window.addEventListener('DOMContentLoaded', () => {
       fetchContributions();
       startVoiceRecognition();
