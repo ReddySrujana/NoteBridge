@@ -70,4 +70,3 @@ http://127.0.0.1:5000
 
 * Voice commands are powered by **Web Speech API** (Chrome required).
 * The database `notebridge.db` stores all user, notebook, and group data.
-* The application is designed to be **accessible and inclusive**, allowing visually impaired users to navigate and inte
