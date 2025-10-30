@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Help - NoteBridge</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f5f8fa;
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 25px 15px;
+      box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 2px solid #ecf0f1;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      width: 100%;
+      text-decoration: none;
+      color: #ecf0f1;
+      padding: 12px 15px;
+      margin: 5px 0;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+      display: block;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(3px);
+    }
+
+    .main-content {
+      margin-left: 260px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #34495e;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    }
+
+    th,
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e0e4e8;
+      text-align: left;
+    }
+
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 30px 20px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      border-top: 4px solid #2980b9;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="User Avatar">
+    <h2>{{ user['full_name'] or user['username'] }}</h2>
+    <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('notebook.list_notebooks') }}">Notebooks</a>
+    <a href="{{ url_for('help.help_page') }}">Help</a>
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
+  </div>
+
+  <div class="main-content">
+    <h1>Voice Commands Supported</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Example Commands</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Navigation</td>
+          <td>“Dashboard”, “Go to dashboard”</td>
+          <td>Opens dashboard</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Create notebook”, “New notebook”</td>
+          <td>Opens new notebook page</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“View groups”, “Open groups”</td>
+          <td>Opens groups page</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Logout”, “Sign out”</td>
+          <td>Logs out</td>
+        </tr>
+        <tr>
+          <td>Accessibility</td>
+          <td>“Read page”, “Read dashboard”</td>
+          <td>Reads dashboard aloud</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Increase font”, “Large text”</td>
+          <td>Makes text bigger</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Decrease font”, “Small text”</td>
+          <td>Makes text smaller</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Normal font size”</td>
+          <td>Resets text size</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>“Enable high contrast”, “Disable high contrast”</td>
+          <td>Toggles high-contrast mode</td>
+        </tr>
+        <tr>
+          <td>Notebook control</td>
+          <td>“Read notebook one”, “Play notebook two”</td>
+          <td>Reads that numbered notebook aloud</td>
+        </tr>
+        <tr>
+          <td>Help</td>
+          <td>“Help”</td>
+          <td>Speaks a list of available commands</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 NoteBridge. All rights reserved.</p>
+  </footer>
+
+  <script>
+  const synth = window.speechSynthesis;
+  let rec = null;
+
+  function speak(text) {
+    if (synth.speaking || synth.pending) synth.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'en-US';
+    msg.rate = 1;
+    msg.pitch = 1;
+    synth.speak(msg);
+  }
+
+  function handleCommand(cmd) {
+    cmd = cmd.toLowerCase().trim();
+    console.log("🎤 Heard command:", cmd);
+
+    // === Go Back to Dashboard ===
+    if (cmd.includes('go back') || cmd.includes('dashboard')) {
+      console.log("🏠 Going back to Dashboard...");
+      speak("Returning to your dashboard.");
+      window.location.href = '{{ url_for("dashboard.dashboard") }}';
+      return;
+    }
+
+    // === Read All Commands ===
+    if (cmd.includes('read commands') || cmd.includes('list commands') || cmd === 'help') {
+      console.log("📖 Reading all available commands...");
+      const commandsText = document.querySelector('.main-content').innerText.replace(/\s+/g, ' ').trim();
+      speak("Here are all available voice commands. " + commandsText);
+      return;
+    }
+
+    // === Stop Reading ===
+    if (cmd.includes('stop reading') || cmd.includes('stop voice')) {
+      synth.cancel();
+      console.log("🛑 Stopped speaking.");
+      return;
+    }
+
+    console.log("❓ Unrecognized voice command:", cmd);
+  }
+
+  function startVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Please use Google Chrome for voice support.");
+      return;
+    }
+    if (rec) { rec.stop(); rec = null; }
+
+    rec = new webkitSpeechRecognition();
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = false;
+
+    rec.onresult = (e) => {
+      const text = e.results[e.results.length - 1][0].transcript;
+      handleCommand(text);
+    };
+
+    rec.onerror = (e) => console.error("Speech error:", e.error);
+    rec.onend = () => setTimeout(startVoiceRecognition, 1500);
+    rec.start();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // 🎧 Start listening
+    startVoiceRecognition();
+
+    // 🗣️ Play welcome voice message once page loads
+    setTimeout(() => {
+      speak("Welcome to NoteBridge Help page. Say read commands to hear the available commands.");
+    }, 1000);
+  });
+</script>
+
+</body>
+
+</html>

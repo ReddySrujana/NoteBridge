@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Notebook - NoteBridge</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2d2f3b);
+            color: #f5f5f5;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 250px;
+            background: #24253a;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            color: #5865f2;
+            text-align: center;
+        }
+
+        .sidebar a {
+            color: #ddd;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            margin: 0.2rem 0;
+            border-radius: 10px;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background: #3b3f5c;
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        /* --- Main Content --- */
+        .main {
+            margin-left: 270px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        form {
+            background: #2e3148;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="text"],
+        textarea {
+            background: #3a3e5f;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem;
+            color: #fff;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #5865f2;
+            background: #424769;
+        }
+
+        .btn {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+        }
+
+        footer {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #bbb;
+            text-align: center;
+        }
+
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            .sidebar a {
+                text-align: center;
+                padding: 0.5rem 0;
+            }
+
+            .main {
+                margin-left: 90px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2>📘 NoteBridge</h2>
+        <a href="{{ url_for('dashboard.dashboard') }}">🏠 Dashboard</a>
+        <a href="{{ url_for('notebook.create_notebook') }}">🆕 New Notebook</a>
+        <a href="{{ url_for('group.list_groups') }}">👥 Groups</a>
+        <a href="{{ url_for('help.help_page') }}">Help</a>
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main">
+        <h1>Create New Notebook</h1>
+
+        <form id="create-notebook-form" method="POST" action="/notebook/create">
+            <input type="text" id="notebook-title" name="title" placeholder="Notebook title" required>
+            <textarea name="description" id="notebook-description" rows="4"
+                placeholder="Notebook description (optional)"></textarea>
+            <button type="submit" class="btn">Create Notebook</button>
+            <button type="button" id="voice-btn" class="btn">🎙️ Voice Input</button>
+            <button type="button" id="back-btn" class="btn" style="background:#444;">⬅️ Go Back</button>
+        </form>
+
+        <footer>&copy; 2025 NoteBridge</footer>
+    </main>
+
+    <script>
+        const form = document.getElementById("create-notebook-form");
+        const titleField = document.getElementById("notebook-title");
+        const descField = document.getElementById("notebook-description");
+        const backBtn = document.getElementById("back-btn");
+
+        // --- GO BACK BUTTON ---
+        backBtn.addEventListener("click", () => {
+            console.log("🔙 Going back to dashboard...");
+            window.location.href = "{{ url_for('dashboard.dashboard') }}";
+        });
+
+        // --- ALWAYS-ON VOICE INPUT + NAVIGATION ---
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            // restart automatically if stopped
+            recognition.onend = () => {
+                console.log("🎧 Recognition ended — restarting...");
+                setTimeout(() => recognition.start(), 500);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+                console.log("🎙️ Heard:", transcript);
+
+                // Set notebook title from voice input
+                const match = transcript.match(/(?:create|new|start)(?: a)?(?: notebook)?(?: called| named)? (.*)/);
+                if (match) {
+                    const title = match[1].trim() || "Untitled Notebook";
+                    console.log("🗒️ Setting notebook title:", title);
+                    titleField.value = title;
+                }
+
+                // --- Voice Command: Submit notebook ---
+                if (/(save|submit|create notebook)/.test(transcript)) {
+                    console.log("📤 Voice command detected: submitting notebook...");
+                    form.submit();
+                }
+
+                // --- Voice Command: Go Back to Dashboard ---
+                if (/(dashboard|go back|back|main page)/.test(transcript)) {
+                    console.log("🏠 Voice command detected: navigating to dashboard...");
+                    recognition.stop();
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('dashboard.dashboard') }}";
+                    }, 600);
+                }
+            };
+
+            // Start automatically when the page loads
+            window.addEventListener("load", () => {
+                console.log("🎤 Always-on voice mode activated — listening for commands...");
+                recognition.start();
+            });
+
+        } else {
+            console.warn("❌ Speech recognition not supported in this browser.");
+            alert("Speech recognition not supported on this device.");
+        }
+
+        // --- SUBMIT LOG ---
+        form.addEventListener("submit", (e) => {
+            console.log("📤 Submitting notebook:", titleField.value);
+        });
+    </script>
+</body>
+
+</html>

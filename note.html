@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{ note['title'] }} - Note</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      background: #f4f6f9;
+      color: #2c3e50;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: linear-gradient(180deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 1.3rem;
+    }
+
+    .sidebar a,
+    .sidebar button {
+      display: block;
+      background: none;
+      border: none;
+      color: #ecf0f1;
+      text-align: left;
+      padding: 10px 15px;
+      margin: 6px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s;
+    }
+
+    .sidebar a:hover,
+    .sidebar button:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .main-content {
+      margin-left: 260px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      color: #34495e;
+    }
+
+    .top-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background: #2980b9;
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      background: #1f6391;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+    }
+
+    pre {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      background: #3498db;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 14px;
+    }
+
+    .comment {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .reply {
+      margin-left: 25px;
+      background: #eef2f5;
+    }
+
+    .comment-actions {
+      margin-top: 5px;
+    }
+
+    .comment-actions button {
+      background: none;
+      border: none;
+      color: #2980b9;
+      cursor: pointer;
+      font-size: 13px;
+      margin-right: 5px;
+    }
+
+    .comment-actions button:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #777;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="sidebar">
+    <h2>NoteBridge</h2>
+    <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('notebook.view_notebook', notebook_id=note['notebook_id']) }}">Notebook</a>
+    <button id="delete-note-btn">Delete Note</button>
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
+  </nav>
+
+  <div class="main-content">
+    <h1>{{ note['title'] }}</h1>
+
+    <div class="top-buttons">
+      <button id="save-btn" class="btn">Save</button>
+      <button id="dictate-btn" class="btn">Start Dictation</button>
+      <button id="read-page-btn" class="btn">Read Page</button>
+      <button id="clear-btn" class="btn">Clear</button>
+      <button id="stop-voice-btn" class="btn btn-danger">Stop Voice</button>
+    </div>
+
+    <article id="note-content">
+      <pre>{{ note['content'] }}</pre>
+    </article>
+
+    <section>
+      <h2>Edit Note</h2>
+      <textarea id="editor">{{ note['content'] }}</textarea>
+    </section>
+
+    <section>
+      <h2>Tags</h2>
+      <div class="tag-list" id="tag-list">
+        {% for t in tags %}
+        <span class="tag">{{ t['tag'] }}</span>
+        {% else %}
+        <p>No tags yet.</p>
+        {% endfor %}
+      </div>
+      <form id="add-tag-form">
+        <input type="text" id="new-tag" placeholder="Add new tag...">
+        <button type="submit" class="btn">Add</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Comments</h2>
+      <div id="comment-section">
+        {% for c in comments %}
+        <div class="comment" data-id="{{ c['id'] }}" data-parent="{{ c['parent_id'] or '' }}">
+          <strong>{{ c['username'] or 'Anonymous' }}:</strong>
+          <p class="comment-text">{{ c['content'] }}</p>
+          <small>{{ c['timestamp'] }}</small>
+          <div class="comment-actions">
+            <button class="reply-btn">Reply</button>
+            {% if c['user_id'] == current_user['id'] %}
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p>No comments yet.</p>
+        {% endfor %}
+      </div>
+      <form id="comment-form">
+        <textarea id="comment-text" placeholder="Add a comment..."></textarea>
+        <button type="submit" class="btn">Post Comment</button>
+      </form>
+    </section>
+    <section aria-label="Audio Playback Controls">
+      <h2>Audio Playback Controls</h2>
+      <div id="audio-controls" style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn" id="play-btn" aria-label="Play Audio" accesskey="p">▶️ Play</button>
+        <button class="btn" id="pause-btn" aria-label="Pause Audio" accesskey="u">⏸️ Pause</button>
+        <button class="btn" id="stop-btn" aria-label="Stop Audio" accesskey="s">⏹️ Stop</button>
+        <button class="btn" id="rewind-btn" aria-label="Rewind Audio" accesskey="r">⏪ Rewind 10s</button>
+        <label for="speed-control" style="margin-left:10px;">Speed:</label>
+        <select id="speed-control" aria-label="Playback Speed">
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
+      <audio id="audio-player" src="/static/sample.mp3" preload="auto"></audio>
+    </section>
+
+    <footer>
+      <p>&copy; {{ current_year or 2025 }} NoteBridge</p>
+    </footer>
+  </div>
+
+<script>
+  window.noteData = {
+    noteId: {{ note['id'] | tojson }},
+    notebookId: {{ note['notebook_id'] | tojson }},
+    noteTitle: {{ note['title'] | tojson }},
+    dashboardUrl: "{{ url_for('dashboard.dashboard') }}",
+    logoutUrl: "{{ url_for('auth.logout') }}"
+  };
+</script>
+
+<script src="{{ url_for('static', filename='js/note_page.js') }}"></script>
+
+</body>
+
+</html>
