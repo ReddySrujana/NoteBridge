@@ -2,81 +2,340 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>NoteBridge - Welcome</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NoteBridge | Welcome</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f5f7fa;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    a {
+      color: #0056b3;
+      text-decoration: none;
+    }
+
+    a:focus,
+    button:focus {
+      outline: 3px solid #0056b3;
+      outline-offset: 2px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    header {
+      background-color: #0d47a1;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: white;
+      font-weight: bold;
+    }
+
+    .accessibility-controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .accessibility-controls button {
+      background-color: #1565c0;
+      color: white;
+    }
+
+    .accessibility-controls button:hover {
+      background-color: #0d47a1;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      background: linear-gradient(to right, #1976d2, #42a5f5);
+      color: white;
+    }
+
+    .hero h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .btn-primary {
+      background-color: #fff;
+      color: #1565c0;
+      font-weight: bold;
+    }
+
+    .btn-primary:hover {
+      background-color: #e3f2fd;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: white;
+      border: 2px solid white;
+      margin-left: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      padding: 2rem;
+      background-color: #ffffff;
+    }
+
+    .features article {
+      background-color: #f1f4f9;
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .features article:hover {
+      transform: scale(1.03);
+    }
+
+    .features h3 {
+      color: #0d47a1;
+    }
+
+    footer {
+      background-color: #0d47a1;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    footer a {
+      color: #bbdefb;
+      margin: 0 0.5rem;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    body.high-contrast {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body.high-contrast a,
+    body.high-contrast header,
+    body.high-contrast footer {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body.high-contrast button {
+      background-color: #fff;
+      color: #000;
+    }
+  </style>
 </head>
+
 <body>
-  <header>
-    <div class="logo">
-      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="NoteBridge Logo">
-      <h1>NoteBridge</h1>
+  <header role="banner">
+    <h1>NoteBridge</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="{{ url_for('auth.index') }}">Home</a></li>
+        <li><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+        <li><a href="{{ url_for('help.help_page') }}">Accessibility</a></li>
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+        <li><a href="{{ url_for('auth.register') }}">Sign Up</a></li>
+      </ul>
+    </nav>
+    <div class="accessibility-controls">
+      <button id="fontPlus" aria-label="Increase font size">A+</button>
+      <button id="fontMinus" aria-label="Decrease font size">A-</button>
+      <button id="toggleContrast" aria-label="Toggle high contrast mode">High Contrast</button>
     </div>
   </header>
 
-  <main>
-    <section class="intro">
-      <h2>Welcome to NoteBridge</h2>
-      <p>A collaborative, accessible note-taking platform for inclusive learning.</p>
-      <nav>
-        <a href="{{ url_for('auth.login') }}" class="btn">Login</a>
-        <a href="{{ url_for('auth.register') }}" class="btn">Register</a>
-      </nav>
-    </section>
+  <main role="main" class="hero">
+    <h2>Collaborate. Communicate. Create — Without Barriers.</h2>
+    <p>Empowering inclusive note-taking for all students through real-time collaboration and accessibility-first design.
+    </p>
+    <button class="btn-primary" id="getStartedBtn" onclick="window.location.href='{{ url_for('auth.register') }}'">
+      Get Started
+    </button>
 
-    <section class="slider">
-      <div class="slides">
-        <div class="slide active">
-          <img src="{{ url_for('static', filename='slider1.jpg') }}" alt="Slide 1">
-          <p>Collaborate seamlessly with your peers.</p>
-        </div>
-        <div class="slide">
-          <img src="{{ url_for('static', filename='slider2.jpg') }}" alt="Slide 2">
-          <p>Organize your notes efficiently.</p>
-        </div>
-        <div class="slide">
-          <img src="{{ url_for('static', filename='slider3.jpg') }}" alt="Slide 3">
-          <p>Learn inclusively, anytime, anywhere.</p>
-        </div>
-      </div>
-      <div class="slider-controls">
-        <span class="prev">&#10094;</span>
-        <span class="next">&#10095;</span>
-      </div>
-    </section>
+    <button class="btn-secondary" id="loginBtn" onclick="window.location.href='{{ url_for('auth.login') }}'">
+      Login
+    </button>
+
   </main>
 
-  <footer>
-    <p>&copy; 2025 NoteBridge. All rights reserved.</p>
+  <section class="features" aria-label="Key Features">
+    <article tabindex="0">
+      <h3>📝 Real-Time Collaboration</h3>
+      <p>Edit notes with classmates instantly and accessibly.</p>
+    </article>
+    <article tabindex="0">
+      <h3>🎙️ Voice Input</h3>
+      <p>Speak your notes — NoteBridge listens and transcribes.</p>
+    </article>
+    <article tabindex="0">
+      <h3>🔊 Text-to-Speech</h3>
+      <p>Listen to your notes and navigate with audio cues.</p>
+    </article>
+    <article tabindex="0">
+      <h3>♿ Accessibility First</h3>
+      <p>Screen reader support, high contrast, and custom fonts.</p>
+    </article>
+  </section>
+
+  <footer role="contentinfo">
+    <p>&copy; 2025 NoteBridge. Inclusive Learning for All.</p>
+    <nav aria-label="Footer Links">
+      <a href="{{ url_for('help.help_page') }}">Accessibility Statement</a> |
+      <a href="#">Privacy Policy</a> |
+      <a href="#">Contact</a>
+    </nav>
   </footer>
 
-  <script>
-    // slider functionality
-    const slides = document.querySelectorAll('.slide');
-    let currentSlide = 0;
 
-    const showSlide = index => {
-      slides.forEach((slide, i) => {
-        slide.classList.toggle('active', i === index);
-      });
+<script>
+  // Accessibility Controls
+  const body = document.body;
+  const fontPlus = document.getElementById('fontPlus');
+  const fontMinus = document.getElementById('fontMinus');
+  const toggleContrast = document.getElementById('toggleContrast');
+  const getStartedBtn = document.getElementById('getStartedBtn');
+  const loginBtn = document.getElementById('loginBtn');
+
+  let fontSize = 100;
+  fontPlus.addEventListener('click', () => {
+    fontSize += 10;
+    body.style.fontSize = fontSize + '%';
+  });
+  fontMinus.addEventListener('click', () => {
+    fontSize = Math.max(80, fontSize - 10);
+    body.style.fontSize = fontSize + '%';
+  });
+  toggleContrast.addEventListener('click', () => {
+    body.classList.toggle('high-contrast');
+  });
+
+  // 🔊 Speech function
+  function speak(text) {
+    speechSynthesis.cancel(); // stop anything currently speaking
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 1;
+    utter.pitch = 1;
+    speechSynthesis.speak(utter);
+  }
+
+  // 🗣️ Welcome message
+  function speakWelcomeMessage() {
+    const welcomeText = `Welcome to NoteBridge. Collaborate. Communicate. Create — Without Barriers. 
+    Empowering inclusive note-taking for all students through real-time collaboration and accessibility-first design. 
+    Say "Get Started" to register or "Login" to sign in.`;
+    speak(welcomeText);
+  }
+
+  // 🎤 Voice recognition
+  function startVoiceRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      console.log('Heard:', transcript);
+
+      // Stop speech + recognition before navigating
+      const stopAllAudio = () => {
+        speechSynthesis.cancel();
+        recognition.stop();
+      };
+
+      if (transcript.includes('get started')) {
+        stopAllAudio();
+        speak('Navigating to registration page.');
+        setTimeout(() => window.location.href = "{{ url_for('auth.register') }}", 1500);
+      } else if (transcript.includes('login')) {
+        stopAllAudio();
+        speak('Navigating to login page.');
+        setTimeout(() => window.location.href = "{{ url_for('auth.login') }}", 1500);
+      }
     };
 
-    document.querySelector('.prev').addEventListener('click', () => {
-      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-      showSlide(currentSlide);
-    });
+    recognition.onerror = (e) => console.error('Speech recognition error:', e.error);
+    recognition.onend = () => recognition.start(); // auto-restart for continuous listening
+    recognition.start();
+  }
 
-    document.querySelector('.next').addEventListener('click', () => {
-      currentSlide = (currentSlide + 1) % slides.length;
-      showSlide(currentSlide);
-    });
+  // 🖱️ Start everything after first user interaction
+  window.addEventListener('click', function handleFirstClick() {
+    speakWelcomeMessage();
+    startVoiceRecognition();
+    window.removeEventListener('click', handleFirstClick);
+  });
 
-    setInterval(() => {
-      currentSlide = (currentSlide + 1) % slides.length;
-      showSlide(currentSlide);
-    }, 5000);
-  </script>
+  // 🧹 Stop any speech when leaving the page
+  window.addEventListener('beforeunload', () => {
+    speechSynthesis.cancel();
+  });
+
+  // Also stop speech if user clicks navigation buttons
+  getStartedBtn.addEventListener('click', () => {
+    speechSynthesis.cancel();
+  });
+  loginBtn.addEventListener('click', () => {
+    speechSynthesis.cancel();
+  });
+</script>
+
+
+
 </body>
 
 </html>
