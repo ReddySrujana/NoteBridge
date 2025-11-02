@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteBridge Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: #0d47a1;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        nav a {
+            color: white;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-msg {
+            background: #e3f2fd;
+            align-self: flex-end;
+        }
+
+        .bot-msg {
+            background: #f1f4f9;
+            align-self: flex-start;
+        }
+
+        .input-area {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+        }
+
+        .input-area button {
+            background: #0d47a1;
+            color: white;
+            border: none;
+            padding: 0 1rem;
+            cursor: pointer;
+        }
+
+        .input-area button:hover {
+            background: #1565c0;
+        }
+
+        #summary-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #444;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            max-width: 420px;
+            overflow-wrap: break-word;
+        }
+
+        #summary-popup h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>NoteBridge Chatbot</h1>
+        <nav>
+            <a href="{{ url_for('auth.index') }}">Home</a>
+            <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('help.help_page') }}">Accessibility</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Type or speak a command...">
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </main>
+<script>
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let lastNotebookId = null;
+    let isDictating = false;
+
+    function addMessage(text, sender = "bot") {
+        const div = document.createElement('div');
+        div.className = 'message ' + (sender === "user" ? "user-msg" : "bot-msg");
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Fix common speech mistakes
+    function autocorrectCommand(text) {
+        let t = text.toLowerCase();
+        return t
+            .replace(/\bnot one\b/g, "note one")
+            .replace(/\bdash board\b/g, "dashboard")
+            .replace(/\blog out\b/g, "logout")
+            .replace(/\bnot\b/g, "note")
+            .replace(/\banote\b/g, "add note")
+            .replace(/\badd anote\b/g, "add note")
+            .replace(/\badd a note\b/g, "add note")
+            .replace(/\bpost a note\b/g, "post note")
+            .replace(/\bpost anote\b/g, "post note")
+            .replace(/\bday i note\b/g, "note")
+            .replace(/\bai note\b/g, "note")
+            .trim();
+    }
+
+    // Convert "note one two" → "12"
+    function extractNotebookId(command) {
+        const numWords = {
+            'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+            'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+        };
+        const parts = command.toLowerCase().split(/\s+/);
+        const digits = [];
+        for (let p of parts) {
+            if (!isNaN(p)) digits.push(p);
+            else if (numWords[p] !== undefined) digits.push(numWords[p]);
+        }
+        return digits.length ? digits.join('') : null;
+    }
+
+    function pauseListening() { if (recognition) recognition.stop(); }
+    function resumeListening() { if (recognition) recognition.start(); }
+
+    // === MAIN COMMAND HANDLER ===
+    async function handleCommand(command) {
+        command = autocorrectCommand(command);
+        addMessage(command, "user");
+        const notebookId = extractNotebookId(command);
+
+        // === DASHBOARD / HELP / LOGOUT NAVIGATION ===
+        if (command.includes("go to dashboard") || command.includes("open dashboard") || command.includes("dashboard")) {
+            addMessage("📂 Opening Dashboard...", "bot");
+            window.location.href = "{{ url_for('dashboard.dashboard') }}";
+            return;
+        }
+
+        if (command.includes("help") || command.includes("open help") || command.includes("go to help")) {
+            addMessage("🆘 Opening Help page...", "bot");
+            window.location.href = "{{ url_for('help.help_page') }}";
+            return;
+        }
+
+        if (command.includes("logout") || command.includes("log out")) {
+            addMessage("👋 Logging out...", "bot");
+            window.location.href = "{{ url_for('auth.logout') }}";
+            return;
+        }
+
+        if (command.includes("dashboard") || command.includes("go to dashboard") || command.includes("home page")) {
+            addMessage("🏠 Going to Home page...", "bot");
+            window.location.href = "{{ url_for('auth.index') }}";
+            return;
+        }
+
+        // === SUMMARIZE NOTEBOOK ===
+        if (command.includes("summarize") || command.includes("summarise")) {
+            if (!notebookId) {
+                addMessage("Please say a notebook ID, like 'summarize note one two three'.", "bot");
+                return;
+            }
+            lastNotebookId = notebookId;
+            try {
+                const res = await fetch(`/notebook/${notebookId}/summarize`);
+                const data = await res.json();
+                const summary = data.summary || "No summary available.";
+                document.querySelectorAll("#summary-popup").forEach(p => p.remove());
+                const popup = document.createElement("div");
+                popup.id = "summary-popup";
+                popup.innerHTML = `<h3>📘 Notebook ${notebookId} Summary</h3><p>${summary}</p>`;
+                document.body.appendChild(popup);
+                addMessage(`📘 Notebook ${notebookId} summarized.`, "bot");
+            } catch (err) {
+                console.error(err);
+                addMessage("Failed to summarize notebook.", "bot");
+            }
+            return;
+        }
+
+        // === ADD / POST NOTE (Voice Input) ===
+        if (command.includes("add note") || command.includes("post note")) {
+            if (!notebookId) {
+                addMessage("Please say a notebook ID, e.g. 'add note to note one'", "bot");
+                return;
+            }
+
+            lastNotebookId = notebookId;
+            addMessage("🗣️ Please say your note after the beep.", "bot");
+
+            // Beep cue
+            const beep = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=");
+            beep.play();
+
+            if (recognition) {
+                recognition.onend = () => {
+                    console.log("🎧 Main recognition stopped, starting note mode...");
+                    startNoteDictation(notebookId);
+                };
+                recognition.stop();
+            } else {
+                startNoteDictation(notebookId);
+            }
+            return;
+        }
+
+        // === READ SUMMARY AUDIO ===
+        if (command.includes("read summary")) {
+            if (!lastNotebookId) {
+                addMessage("No notebook selected yet. Summarize one first.", "bot");
+                return;
+            }
+            console.log("🔊 Playing saved summary audio...");
+            pauseListening();
+
+            if (window.currentSummaryAudio) {
+                try {
+                    window.currentSummaryAudio.pause();
+                    window.currentSummaryAudio.currentTime = 0;
+                } catch (e) { }
+                window.currentSummaryAudio = null;
+            }
+
+            try {
+                const audioUrl = `/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`;
+                const audioPlayer = new Audio(audioUrl);
+                audioPlayer.autoplay = true;
+                window.currentSummaryAudio = audioPlayer;
+                audioPlayer.onplay = () => console.log("▶️ Summary audio playing...");
+                audioPlayer.onended = () => {
+                    console.log("✅ Summary finished.");
+                    window.currentSummaryAudio = null;
+                    resumeListening();
+                };
+                audioPlayer.onerror = async () => {
+                    console.log("🎤 Generating new summary audio...");
+                    try {
+                        const tts = await fetch(`/notebook/${lastNotebookId}/tts`);
+                        if (tts.ok) {
+                            const audio = new Audio(`/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`);
+                            audio.play();
+                        } else addMessage("⚠️ Failed to generate summary audio.", "bot");
+                    } catch (err) {
+                        console.error(err);
+                        addMessage("⚠️ Audio generation failed.", "bot");
+                    }
+                    resumeListening();
+                };
+            } catch (err) {
+                console.error("Error playing summary audio:", err);
+                resumeListening();
+                addMessage("⚠️ Could not play the summary audio.", "bot");
+            }
+            return;
+        }
+
+        // Default Fallback
+        addMessage("🤖 Command not recognized.", "bot");
+    }
+
+    // === HELPER: START NOTE DICTATION ===
+    function startNoteDictation(notebookId) {
+        isDictating = true;
+        const noteRecog = new SpeechRecognition();
+        noteRecog.lang = "en-US";
+        noteRecog.continuous = false;
+        noteRecog.interimResults = false;
+
+        setTimeout(() => {
+            try {
+                noteRecog.start();
+                console.log("🎙️ Note dictation started...");
+            } catch (e) {
+                console.error("🎤 Could not start note recognition:", e);
+                addMessage("⚠️ Microphone error. Please try again.", "bot");
+                isDictating = false;
+                try { recognition.start(); } catch (e2) {}
+            }
+        }, 600);
+
+        noteRecog.onresult = async (e) => {
+            const noteContent = e.results[0][0].transcript.trim();
+            addMessage(`📝 Note content: "${noteContent}"`, "user");
+
+            try {
+                const res = await fetch(`/notebook/${notebookId}/add_note`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: noteContent }),
+                });
+                const data = await res.json();
+                addMessage(
+                    data.success
+                        ? `✅ Note added to notebook ${notebookId}.`
+                        : "❌ Failed to add note.",
+                    "bot"
+                );
+            } catch (err) {
+                console.error(err);
+                addMessage("⚠️ Error adding note.", "bot");
+            }
+
+            noteRecog.stop();
+            isDictating = false;
+            setTimeout(() => {
+                try { recognition.start(); } catch (e2) {}
+            }, 1000);
+        };
+
+        noteRecog.onerror = (e) => {
+            console.error("🎤 Note recognition error:", e);
+            addMessage("⚠️ Couldn't capture your note. Please try again.", "bot");
+            isDictating = false;
+            setTimeout(() => {
+                try { recognition.start(); } catch (e2) {}
+            }, 1000);
+        };
+
+        noteRecog.onend = () => {
+            console.log("Note recognition ended.");
+            if (isDictating) isDictating = false;
+            setTimeout(() => {
+                try { recognition.start(); } catch (e2) {}
+            }, 1000);
+        };
+    }
+
+    // === SEND BUTTON / ENTER KEY ===
+    sendBtn.addEventListener('click', () => {
+        const cmd = inputEl.value.trim();
+        if (!cmd) return;
+        inputEl.value = "";
+        handleCommand(cmd);
+    });
+    inputEl.addEventListener('keypress', e => { if (e.key === "Enter") sendBtn.click(); });
+
+    // === SPEECH RECOGNITION BASE ===
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = e => {
+        const transcript = e.results[e.results.length - 1][0].transcript.trim();
+        inputEl.value = transcript;
+        handleCommand(transcript);
+    };
+    recognition.onend = () => recognition.start();
+    recognition.onerror = e => console.error("Speech recognition error:", e);
+    recognition.start();
+</script>
+</body>
+
+</html>
