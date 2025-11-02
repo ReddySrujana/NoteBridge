@@ -29,11 +29,11 @@ jobs:
             pip install pytest
             pytest --maxfail=1 --disable-warnings -q
           else
-            echo "⚠️ No tests directory found — skipping tests."
+            echo "No tests directory found — skipping tests."
           fi
 
       - name: Build confirmation
-        run: echo "✅ Flask app built successfully!"
+        run: echo "Flask app built successfully!"
 
   deploy:
     needs: build-test
@@ -45,8 +45,8 @@ jobs:
 
       - name: Simulate deployment
         run: |
-          echo "🚀 Deploying NoteBridge Flask app..."
+          echo " Deploying NoteBridge Flask app..."
           echo "Application deployed successfully!"
 
       - name: Notify completion
-        run: echo "🎉 CI/CD pipeline completed!"
+        run: echo "CI/CD pipeline completed!"
