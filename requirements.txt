@@ -1,0 +1,23 @@
+# Core web framework
+Flask==3.0.3
+
+# Real-time communication 
+Flask-SocketIO==5.3.6
+eventlet==0.35.2  
+
+# Security and utilities
+Werkzeug==3.0.3
+itsdangerous==2.2.0
+click==8.1.7
+
+# Text-to-speech functionality
+pyttsx3==2.90
+
+# Database 
+SQLAlchemy==2.0.36
+
+pytest==8.3.3
+flake8==7.1.1
+
+
+python-dotenv==1.0.1
