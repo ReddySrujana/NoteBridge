@@ -8,16 +8,17 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      background: #f5f8fa;
+      background: #f0f4f8;
       color: #2c3e50;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
 
+    /* === Sidebar === */
     .sidebar {
-      width: 250px;
-      background: linear-gradient(180deg, #2c3e50, #34495e);
+      width: 260px;
+      background: linear-gradient(180deg, #1f2d3d, #34495e);
       color: #ecf0f1;
       height: 100vh;
       position: fixed;
@@ -26,87 +27,214 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 25px 15px;
-      box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15);
+      padding: 30px 15px;
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
     }
 
     .sidebar img {
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       border-radius: 50%;
-      margin-bottom: 15px;
-      border: 2px solid #ecf0f1;
+      margin-bottom: 20px;
+      border: 3px solid #ecf0f1;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar img:hover {
+      transform: scale(1.05);
     }
 
     .sidebar h2 {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 35px;
+      font-weight: 600;
     }
 
     .sidebar a {
       width: 100%;
       text-decoration: none;
       color: #ecf0f1;
-      padding: 12px 15px;
-      margin: 5px 0;
-      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 8px 0;
+      border-radius: 10px;
       text-align: left;
       cursor: pointer;
       font-size: 15px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
       transition: all 0.3s ease;
       display: block;
     }
 
     .sidebar a:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateX(3px);
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
+    /* === Main Content === */
     .main-content {
-      margin-left: 260px;
-      padding: 30px;
+      margin-left: 280px;
+      padding: 40px 35px;
       flex: 1;
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       color: #34495e;
+      font-size: 2rem;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      border-radius: 12px;
+      background: #ffffff;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      margin-top: 20px;
     }
 
     th,
     td {
-      padding: 12px 15px;
+      padding: 14px 18px;
       border-bottom: 1px solid #e0e4e8;
       text-align: left;
     }
 
     th {
-      background-color: #2980b9;
+      background-color: #3498db;
       color: white;
+      font-weight: 600;
     }
 
     tr:last-child td {
       border-bottom: none;
     }
 
+    /* === Introduction Section === */
+    .intro-section {
+      background: linear-gradient(135deg, #ffffff, #f1f6fb);
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      padding: 35px 40px;
+      margin-bottom: 50px;
+      border-left: 8px solid #3498db;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .intro-section h1,
+    .intro-section h2 {
+      text-align: center;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .intro-section ul {
+      list-style-type: "• ";
+      padding-left: 30px;
+      margin-top: 12px;
+    }
+
+    .intro-section li {
+      margin: 6px 0;
+      color: #2c3e50;
+      line-height: 1.5;
+    }
+
+    /* === Voice Commands Section === */
+    .voice-chatbot {
+      background: linear-gradient(135deg, #e6f0ff, #ffffff);
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      padding: 40px 35px;
+      margin-top: 50px;
+      border-left: 8px solid #3498db;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .voice-chatbot h2 {
+      color: #1565c0;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #bbdefb;
+      padding-bottom: 10px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .vc-block {
+      margin-bottom: 30px;
+      padding: 25px 30px;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+      transition: all 0.3s ease;
+    }
+
+    .vc-block:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .vc-block h3 {
+      color: #0d47a1;
+      margin-bottom: 12px;
+      font-size: 1.3rem;
+    }
+
+    .vc-block ul {
+      list-style-type: "• ";
+      padding-left: 30px;
+      margin-bottom: 12px;
+    }
+
+    .vc-block li {
+      color: #2c3e50;
+      font-size: 1rem;
+      margin: 6px 0;
+      line-height: 1.5;
+    }
+
+    .vc-note {
+      background: #dce9ff;
+      border-left: 5px solid #1565c0;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-style: italic;
+      color: #1a237e;
+      margin-top: 12px;
+    }
+
+    .vc-subtitle {
+      color: #37474f;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    /* === Footer === */
     footer {
-      margin-top: 40px;
-      padding: 30px 20px;
+      margin-top: 60px;
+      padding: 35px 25px;
       background: #2c3e50;
       color: #ecf0f1;
       text-align: center;
-      border-top: 4px solid #2980b9;
+      border-top: 5px solid #3498db;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -122,7 +250,31 @@
   </div>
 
   <div class="main-content">
-    <h1>Voice Commands Supported</h1>
+
+    <!-- === Introduction Section === -->
+    <div class="intro-section">
+      <h1>Welcome to NoteBridge</h1>
+      <p><strong>Purpose:</strong> A collaborative note-taking platform designed to make learning inclusive and accessible for everyone.</p>
+
+      <h2>🎯 Our Vision</h2>
+      <p>
+        NoteBridge is built to support students who face accessibility challenges, enabling them to actively participate in group discussions, lectures, and collaborative projects. 
+        The platform combines real-time note sharing, voice input, and inclusive design principles to ensure everyone can contribute and stay engaged.
+      </p>
+
+      <h2>⚙️ Key Features</h2>
+      <ul>
+        <li>✅ <strong>Dashboard:</strong> Organize notebooks, access shared groups, and customize visual settings for better readability.</li>
+        <li>✅ <strong>Real-Time Collaboration:</strong> Work together on documents with live updates and structured formatting that works with screen readers.</li>
+        <li>✅ <strong>Voice Input:</strong> Dictate your notes during lectures, with automatic transcription and optional speaker identification for group work.</li>
+        <li>✅ <strong>Accessibility Tools:</strong> Keyboard shortcuts, text-to-speech, and clear formatting options.</li>
+        <li>✅ <strong>Group Management:</strong> Share notes, track contributions, and search quickly.</li>
+        <li>✅ <strong>Chatbot Assistance:</strong> Use voice commands to get summaries and add AI notes to notebooks.</li>
+      </ul>
+    </div>
+
+    <!-- === Voice Commands Table === -->
+    <h1>Voice Commands Supported in NoteBridge</h1>
     <table>
       <thead>
         <tr>
@@ -138,19 +290,9 @@
           <td>Opens dashboard</td>
         </tr>
         <tr>
-          <td></td>
-          <td>“Create notebook”, “New notebook”</td>
-          <td>Opens new notebook page</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>“View groups”, “Open groups”</td>
-          <td>Opens groups page</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>“Logout”, “Sign out”</td>
-          <td>Logs out</td>
+          <td>Navigation</td>
+          <td>“Open chatbot”</td>
+          <td>Opens chatbot page</td>
         </tr>
         <tr>
           <td>Accessibility</td>
@@ -158,119 +300,113 @@
           <td>Reads dashboard aloud</td>
         </tr>
         <tr>
-          <td></td>
-          <td>“Increase font”, “Large text”</td>
-          <td>Makes text bigger</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>“Decrease font”, “Small text”</td>
-          <td>Makes text smaller</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>“Normal font size”</td>
-          <td>Resets text size</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>“Enable high contrast”, “Disable high contrast”</td>
-          <td>Toggles high-contrast mode</td>
-        </tr>
-        <tr>
           <td>Notebook control</td>
           <td>“Read notebook one”, “Play notebook two”</td>
-          <td>Reads that numbered notebook aloud</td>
+          <td>Reads notebook aloud</td>
         </tr>
         <tr>
           <td>Help</td>
           <td>“Help”</td>
-          <td>Speaks a list of available commands</td>
+          <td>Speaks available commands</td>
         </tr>
       </tbody>
     </table>
-  </div>
 
+    <!-- === Voice Commands for Chatbot Section === -->
+    <section class="voice-chatbot" id="commandsSection">
+      <h2>🎙️ Available Voice Commands for Chatbot</h2>
+
+      <div class="vc-block">
+        <h3>🗒️ Notebook Control</h3>
+        <ul>
+          <li>“Add note to note one”</li>
+          <li>“Post note to note one”</li>
+          <li>“Add note to note two”</li>
+        </ul>
+        <p class="vc-note">
+          → The bot will ask you to say your note after the beep, then save it.
+        </p>
+      </div>
+
+      <div class="vc-block">
+        <h3>🧠 Summaries</h3>
+        <ul>
+          <li>“Summarize note one”</li>
+          <li>“Summarize note two”</li>
+          <li>Read summary</li>
+          <strong>“USER should say read summary to hear the summary”</strong>
+        </ul>
+        <p class="vc-note">→ The bot will summarize that notebook and display the summary.</p>
+      </div>
+
+      
   <footer>
     <p>&copy; 2025 NoteBridge. All rights reserved.</p>
   </footer>
 
   <script>
-  const synth = window.speechSynthesis;
-  let rec = null;
+    const synth = window.speechSynthesis;
+    let rec = null;
 
-  function speak(text) {
-    if (synth.speaking || synth.pending) synth.cancel();
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'en-US';
-    msg.rate = 1;
-    msg.pitch = 1;
-    synth.speak(msg);
-  }
-
-  function handleCommand(cmd) {
-    cmd = cmd.toLowerCase().trim();
-    console.log("🎤 Heard command:", cmd);
-
-    // === Go Back to Dashboard ===
-    if (cmd.includes('go back') || cmd.includes('dashboard')) {
-      console.log("🏠 Going back to Dashboard...");
-      speak("Returning to your dashboard.");
-      window.location.href = '{{ url_for("dashboard.dashboard") }}';
-      return;
+    function speak(text) {
+      if (synth.speaking || synth.pending) synth.cancel();
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-US';
+      msg.rate = 1;
+      msg.pitch = 1;
+      synth.speak(msg);
     }
 
-    // === Read All Commands ===
-    if (cmd.includes('read commands') || cmd.includes('list commands') || cmd === 'help') {
-      console.log("📖 Reading all available commands...");
-      const commandsText = document.querySelector('.main-content').innerText.replace(/\s+/g, ' ').trim();
-      speak("Here are all available voice commands. " + commandsText);
-      return;
+    function startRecognition() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Please use Google Chrome for voice support.");
+        return;
+      }
+
+      if (rec) {
+        rec.stop();
+        rec = null;
+      }
+
+      rec = new webkitSpeechRecognition();
+      rec.lang = 'en-US';
+      rec.continuous = true;
+      rec.interimResults = false;
+
+      rec.onresult = (e) => {
+        const text = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
+        console.log("🎤 Heard:", text);
+
+        if (text.includes("introduction")) {
+          const content = document.querySelector(".main-content").innerText;
+          speak("Reading the NoteBridge Help page. " + content);
+        } else if (text.includes("go to dashboard")) {
+          synth.cancel();
+          window.location.href = "/dashboard";
+        } else if (text.includes("open chatbot")) {
+          synth.cancel();
+          window.location.href = "/chatbot";
+        }
+      };
+
+      rec.onerror = (e) => console.error("Speech error:", e.error);
+      rec.onend = () => setTimeout(startRecognition, 1500);
+      rec.start();
     }
 
-    // === Stop Reading ===
-    if (cmd.includes('stop reading') || cmd.includes('stop voice')) {
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        speak("Welcome to the NoteBridge Help page. Say introduction to hear the entire page.");
+      }, 1200);
+
+      startRecognition();
+    });
+
+    window.addEventListener('beforeunload', () => {
       synth.cancel();
-      console.log("🛑 Stopped speaking.");
-      return;
-    }
-
-    console.log("❓ Unrecognized voice command:", cmd);
-  }
-
-  function startVoiceRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert("Please use Google Chrome for voice support.");
-      return;
-    }
-    if (rec) { rec.stop(); rec = null; }
-
-    rec = new webkitSpeechRecognition();
-    rec.lang = 'en-US';
-    rec.continuous = true;
-    rec.interimResults = false;
-
-    rec.onresult = (e) => {
-      const text = e.results[e.results.length - 1][0].transcript;
-      handleCommand(text);
-    };
-
-    rec.onerror = (e) => console.error("Speech error:", e.error);
-    rec.onend = () => setTimeout(startVoiceRecognition, 1500);
-    rec.start();
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    // 🎧 Start listening
-    startVoiceRecognition();
-
-    // 🗣️ Play welcome voice message once page loads
-    setTimeout(() => {
-      speak("Welcome to NoteBridge Help page. Say read commands to hear the available commands.");
-    }, 1000);
-  });
-</script>
-
+      if (rec) rec.stop();
+    });
+  </script>
 </body>
 
 </html>
