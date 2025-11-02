@@ -7,6 +7,7 @@ from flask import jsonify, send_file
 import pyttsx3
 from tempfile import NamedTemporaryFile
 from io import BytesIO
+import os
 
 notebook_bp = Blueprint('notebook', __name__, url_prefix='/notebook')
 
@@ -27,7 +28,7 @@ def list_notebooks():
     ).fetchall()
     return render_template('dashboard.html', user=user, notebooks=notebooks, groups=groups, current_user=user)
 
-
+# route for viewing a specific notebook
 @notebook_bp.route('/notebook/<int:notebook_id>')
 @login_required
 def view_notebook(notebook_id):
@@ -83,7 +84,7 @@ def create_notebook():
     # --- GET request: render creation form ---
     print(f"🧱 Rendering notebook creation form for user {user['id']}")
     return render_template('notebook_create.html', user=user)
-
+# route for updating notebook metadata
 @notebook_bp.route('/notebook/<int:notebook_id>', methods=['PUT'])
 @login_required
 def update_notebook(notebook_id):
@@ -107,7 +108,7 @@ def update_notebook(notebook_id):
     db.commit()
     return jsonify({'message': 'notebook updated'})
 
-
+# route for deleting a notebook
 @notebook_bp.route('/notebook/delete/<int:notebook_id>', methods=['POST'])
 @login_required
 def delete_notebook(notebook_id):
@@ -185,15 +186,18 @@ def create_note():
 
     return jsonify({'note_id': cur.lastrowid, 'message': 'note created'})
 
+# route for updating a note
 
 @notebook_bp.route('/note/<int:note_id>', methods=['PUT'])
 @login_required
 def update_note(note_id):
     """📝 Update an existing note."""
+    import datetime
     db = get_db()
     note = db.execute('SELECT * FROM notes WHERE id=?', (note_id,)).fetchone()
     if not note:
         return jsonify({'error': 'note not found'}), 404
+
     user = current_user()
     if note['created_by'] != user['id']:
         return jsonify({'error': 'unauthorized'}), 403
@@ -202,22 +206,23 @@ def update_note(note_id):
     title = data.get('title', note['title'])
     content = data.get('content', note['content'])
     now = datetime.datetime.utcnow().isoformat()
+
     db.execute(
         'UPDATE notes SET title=?, content=?, updated_at=? WHERE id=?',
         (title, content, now, note_id)
     )
     db.commit()
 
-    # Log contribution (Sprint 2)
+    # include timestamp in contributions
     db.execute(
-        'INSERT INTO contributions (note_id, user_id, action, detail) VALUES (?, ?, ?, ?)',
-        (note_id, user['id'], 'Edited note', f'Title: {title}')
+        'INSERT INTO contributions (note_id, user_id, action, detail, timestamp) VALUES (?, ?, ?, ?, ?)',
+        (note_id, user['id'], 'Edited note', f'Title: {title}', datetime.datetime.utcnow())
     )
     db.commit()
 
-    return jsonify({'message': 'note updated'})
+    return jsonify({'message': 'note updated successfully'})
 
-
+# route for deleting a note
 @notebook_bp.route('/note/<int:note_id>', methods=['DELETE'])
 @login_required
 def delete_note(note_id):
@@ -226,21 +231,24 @@ def delete_note(note_id):
     note = db.execute('SELECT * FROM notes WHERE id=?', (note_id,)).fetchone()
     if not note:
         return jsonify({'error': 'note not found'}), 404
+
     user = current_user()
     if note['created_by'] != user['id']:
         return jsonify({'error': 'unauthorized'}), 403
 
+    # Delete the note
     db.execute('DELETE FROM notes WHERE id=?', (note_id,))
     db.commit()
 
-    # Log contribution (Sprint 2)
+    # Log the deletion with timestamp
+    from datetime import datetime
     db.execute(
-        'INSERT INTO contributions (note_id, user_id, action, detail) VALUES (?, ?, ?, ?)',
-        (note_id, user['id'], 'Deleted note', f'Note ID: {note_id}')
+        'INSERT INTO contributions (note_id, user_id, action, detail, timestamp) VALUES (?, ?, ?, ?, ?)',
+        (note_id, user['id'], 'Deleted note', f'Note ID: {note_id}', datetime.utcnow())
     )
     db.commit()
 
-    return jsonify({'message': 'note deleted'})
+    return jsonify({'message': f'note {note_id} deleted successfully'})
 
 
 # 🏷️ Add a tag to a note (Sprint 2).
@@ -272,7 +280,10 @@ def get_contributions():
 
 # search and summary routes
 
-# SUMMARIZE NOTE CONTENT USING TEXT-TO-SPEECH
+
+# ==========================================================
+# === SUMMARIZE NOTE CONTENT USING TEXT-TO-SPEECH (TTS) ===
+# ==========================================================
 
 def generate_summary(text):
     print("[LOG] Generating summary...")
@@ -281,17 +292,20 @@ def generate_summary(text):
     if len(sentences) <= 3:
         print("[LOG] Short content, returning full text as summary.")
         return text
+
     words = re.findall(r'\w+', text.lower())
     freq = {}
     for w in words:
         if len(w) > 3:
             freq[w] = freq.get(w, 0) + 1
+
     scored = [(sum(freq.get(w, 0) for w in s.lower().split()), s) for s in sentences]
     top_sentences = [s for _, s in sorted(scored, reverse=True)[:5]]
     summary = " ".join(top_sentences).strip()
-    print(f"[LOG] Summary generated: {summary[:100]}{'...' if len(summary)>100 else ''}")
+    print(f"[LOG] Summary generated: {summary[:100]}{'...' if len(summary) > 100 else ''}")
     return summary
 
+# route for summarizing notebook content
 @notebook_bp.route('/<int:notebook_id>/summarize', methods=['GET'])
 @login_required
 def summarize_notebook(notebook_id):
@@ -301,67 +315,91 @@ def summarize_notebook(notebook_id):
     if not notebook:
         print("[ERROR] Notebook not found")
         return jsonify({'error': 'notebook not found'}), 404
+
     notes = db.execute('SELECT title, content FROM notes WHERE notebook_id=?', (notebook_id,)).fetchall()
     if not notes:
         print("[LOG] No notes found in notebook")
         return jsonify({'summary': "This notebook has no notes."})
+
     full_text = " ".join(f"{n['title']}. {n['content']}" for n in notes if n['content']).strip()
     if not full_text:
         print("[LOG] Notebook content empty")
         return jsonify({'summary': "Notebook content is empty."})
+
     summary = generate_summary(full_text)
     print("[LOG] Returning JSON summary")
     return jsonify({'summary': summary})
 
-@notebook_bp.route('/<int:notebook_id>/tts', methods=['GET'])
-@login_required
-def tts_summary(notebook_id):
-    print(f"[LOG] /tts called for notebook_id={notebook_id}")
-    db = get_db()
-    notebook = db.execute('SELECT * FROM notebooks WHERE id=?', (notebook_id,)).fetchone()
-    if not notebook:
-        print("[ERROR] Notebook not found")
-        return jsonify({'error': 'notebook not found'}), 404
-    notes = db.execute('SELECT title, content FROM notes WHERE notebook_id=?', (notebook_id,)).fetchall()
-    if not notes:
-        print("[ERROR] No notes to read")
-        return jsonify({'error': 'No notes to read.'}), 404
-    full_text = " ".join(f"{n['title']}. {n['content']}" for n in notes if n['content']).strip()
-    if not full_text:
-        print("[ERROR] Notebook content empty")
-        return jsonify({'error': 'Notebook empty.'}), 404
-    summary = generate_summary(full_text)
-    print(f"[LOG] Generating TTS for summary (first 100 chars): {summary[:100]}")
 
-    try:
-        audio_bytes = BytesIO()
-        engine = pyttsx3.init()
-        engine.save_to_file(summary, 'summary.mp3')
-        engine.runAndWait()
-        engine.stop()
-        print("[LOG] TTS saved to summary.mp3")
+# ==========================================================
+# route for serving summary audio file
+# ==========================================================
 
-        with open('summary.mp3', 'rb') as f:
-            audio_bytes.write(f.read())
-        audio_bytes.seek(0)
-        print("[LOG] Sending TTS file to client")
-        return send_file(audio_bytes, mimetype='audio/mpeg', as_attachment=False, download_name='summary.mp3')
-    except Exception as e:
-        print("[ERROR] TTS generation failed:", e)
-        return jsonify({'error': 'TTS generation failed.'}), 500
-    
-# Serve the generated summary audio file
 @notebook_bp.route('/<int:notebook_id>/summary.mp3', methods=['GET'])
 @login_required
 def serve_summary_audio(notebook_id):
-    import os
+    """
+    When frontend requests /summary.mp3, this route will:
+      - Delete any old summary.mp3 file
+      - Regenerate a new one using the latest notebook content
+      - Log whether deletion succeeded
+      - Serve the new audio file
+    """
+    print(f"[LOG] 🎧 /summary.mp3 requested for notebook {notebook_id}")
+    db = get_db()
     file_path = os.path.join(os.getcwd(), 'summary.mp3')
-    if not os.path.exists(file_path):
-        print("[ERROR] summary.mp3 not found at", file_path)
-        return jsonify({'error': 'Summary audio not found.'}), 404
-    print(f"[LOG] Serving summary.mp3 for notebook {notebook_id}")
-    return send_file(file_path, mimetype='audio/mpeg', as_attachment=False)
 
+    # === 🧹 Delete old summary file ===
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            print(f"[LOG] ✅ Deleted old summary.mp3 at: {file_path}")
+        except PermissionError:
+            print(f"[ERROR] ❌ Permission denied deleting {file_path}. It may be locked by another process.")
+        except Exception as e:
+            print(f"[ERROR] ❌ Failed to delete old summary.mp3: {e}")
+    else:
+        print("[LOG] 🚫 No existing summary.mp3 found. Proceeding to create a new one.")
+
+    # === Get notebook content ===
+    notebook = db.execute('SELECT * FROM notebooks WHERE id=?', (notebook_id,)).fetchone()
+    if not notebook:
+        print("[ERROR] Notebook not found.")
+        return jsonify({'error': 'Notebook not found.'}), 404
+
+    notes = db.execute('SELECT title, content FROM notes WHERE notebook_id=?', (notebook_id,)).fetchall()
+    if not notes:
+        print("[ERROR] No notes to read.")
+        return jsonify({'error': 'No notes found.'}), 404
+
+    full_text = " ".join(f"{n['title']}. {n['content']}" for n in notes if n['content']).strip()
+    if not full_text:
+        print("[ERROR] Notebook content empty.")
+        return jsonify({'error': 'Notebook empty.'}), 404
+
+    # === Generate new summary ===
+    summary = generate_summary(full_text)
+
+    try:
+        engine = pyttsx3.init()
+        engine.save_to_file(summary, file_path)
+        engine.runAndWait()
+        engine.stop()
+        print(f"[LOG] 🎵 New summary.mp3 generated successfully at: {file_path}")
+    except Exception as e:
+        print(f"[ERROR] ❌ Failed to generate TTS summary: {e}")
+        return jsonify({'error': 'Failed to generate summary audio.'}), 500
+
+    # === Serve the new file ===
+    try:
+        print(f"[LOG] ✅ Serving fresh summary.mp3 for notebook {notebook_id}")
+        return send_file(file_path, mimetype='audio/mpeg', as_attachment=False)
+    except Exception as e:
+        print(f"[ERROR] Failed to send summary.mp3: {e}")
+        return jsonify({'error': 'Could not serve summary file.'}), 500
+
+
+#--------------------------------------------------------------------------------------------------#
 # 🔍 Search notes within all notebooks.
 @notebook_bp.route('/search_notebooks')
 @login_required
@@ -490,3 +528,40 @@ def delete_comment(comment_id):
     db.commit()
 
     return jsonify({'message': 'comment deleted successfully'})
+
+
+# ============================================================
+# ADD NOTE TO NOTEBOOK (used by chatbot)
+# ============================================================
+@notebook_bp.route('/<int:notebook_id>/add_note', methods=['POST'])
+@login_required
+def add_note(notebook_id):
+    print(f"[LOG] /add_note called for notebook_id={notebook_id}")
+
+    db = get_db()
+    notebook = db.execute('SELECT * FROM notebooks WHERE id=?', (notebook_id,)).fetchone()
+    if not notebook:
+        print("[ERROR] Notebook not found")
+        return jsonify({'error': 'Notebook not found'}), 404
+
+    data = request.get_json()
+    content = (data.get('content') or "").strip()
+    if not content:
+        print("[ERROR] No note content provided")
+        return jsonify({'error': 'No content provided'}), 400
+
+    user = current_user()
+    now = datetime.datetime.utcnow().isoformat()
+
+    # Add required fields created_at, updated_at, created_by
+    db.execute(
+        '''
+        INSERT INTO notes (notebook_id, title, content, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''',
+        (notebook_id, 'Voice Note', content, user['id'], now, now)
+    )
+    db.commit()
+
+    print(f"[LOG] ✅ Note added successfully to notebook {notebook_id}")
+    return jsonify({'success': True, 'message': 'Note added successfully.'})

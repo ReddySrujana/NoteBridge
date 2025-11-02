@@ -11,7 +11,7 @@ import pyttsx3
 from tempfile import NamedTemporaryFile
 
 # -----------------------------
-# Help Blueprint 
+# Help Blueprint
 # -----------------------------
 help_bp = Blueprint('help', __name__, url_prefix='/help', template_folder='templates')
 
@@ -21,6 +21,26 @@ def help_page():
     """Render the Help page (accessible to logged-in users only)."""
     user = current_user()
     return render_template('help.html', user=user)
+
+# -----------------------------
+# Chatbot Blueprint
+# -----------------------------
+chatbot_bp = Blueprint('chatbot', __name__, template_folder='templates')
+
+@chatbot_bp.route('/chatbot', methods=['GET'])
+@login_required
+def chatbot_page():
+    """Render chatbot page with all notebooks available."""
+    user = current_user()
+    db = get_db()
+    notebooks = db.execute(
+        'SELECT id, title FROM notebooks WHERE owner_id=? ORDER BY created_at DESC',
+        (user['id'],)
+    ).fetchall()
+    # Convert to list of dicts (for |tojson)
+    notebooks_list = [dict(nb) for nb in notebooks]
+    return render_template('chatbot.html', user=user, notebooks=notebooks_list)
+
 
 # -----------------------------
 # Flask App Configuration
@@ -42,6 +62,7 @@ app.register_blueprint(dashboard_bp)
 app.register_blueprint(notebook_bp)
 app.register_blueprint(group_bp)
 app.register_blueprint(help_bp)
+app.register_blueprint(chatbot_bp)
 
 # -----------------------------
 # Database Management
@@ -60,7 +81,6 @@ if not os.path.exists(DATABASE):
 # -----------------------------
 @socketio.on('join_note')
 def handle_join(data):
-    """Join a note-specific room for real-time collaboration."""
     note_id = data.get('note_id')
     if note_id:
         join_room(f"note_{note_id}")
@@ -69,7 +89,6 @@ def handle_join(data):
 
 @socketio.on('edit')
 def handle_edit(data):
-    """Broadcast edits to all users in the same note room."""
     note_id = data.get('note_id')
     if note_id:
         emit('update', data, room=f"note_{note_id}", include_self=False)
@@ -80,10 +99,6 @@ def handle_edit(data):
 @app.route('/note/<int:note_id>/speak', methods=['POST'])
 @login_required
 def speak_note(note_id):
-    """
-    Convert a note's text to speech using pyttsx3.
-    Blind-friendly audio playback via server-side TTS.
-    """
     db = get_db()
     note = db.execute("SELECT title, content FROM notes WHERE id=?", (note_id,)).fetchone()
     if not note:
@@ -95,7 +110,6 @@ def speak_note(note_id):
     engine = pyttsx3.init()
     voices = engine.getProperty('voices')
 
-    # Select male or female voice
     selected_voice = None
     for v in voices:
         if voice_type == "female" and "female" in v.name.lower():
@@ -109,7 +123,6 @@ def speak_note(note_id):
 
     engine.setProperty('rate', 170)
 
-    # Generate audio and store temporarily
     tmp_file = NamedTemporaryFile(delete=False, suffix=".wav")
     tmp_path = tmp_file.name
     tmp_file.close()
@@ -118,7 +131,6 @@ def speak_note(note_id):
     engine.save_to_file(text, tmp_path)
     engine.runAndWait()
 
-    # Serve the generated file to frontend
     return send_file(tmp_path, mimetype='audio/wav', as_attachment=False)
 
 # -----------------------------
