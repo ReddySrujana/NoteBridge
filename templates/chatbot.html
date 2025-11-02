@@ -300,7 +300,7 @@
                 window.currentSummaryAudio = audioPlayer;
                 audioPlayer.onplay = () => console.log("▶️ Summary audio playing...");
                 audioPlayer.onended = () => {
-                    console.log("✅ Summary finished.");
+                    console.log("Summary finished.");
                     window.currentSummaryAudio = null;
                     resumeListening();
                 };
@@ -311,17 +311,17 @@
                         if (tts.ok) {
                             const audio = new Audio(`/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`);
                             audio.play();
-                        } else addMessage("⚠️ Failed to generate summary audio.", "bot");
+                        } else addMessage("Failed to generate summary audio.", "bot");
                     } catch (err) {
                         console.error(err);
-                        addMessage("⚠️ Audio generation failed.", "bot");
+                        addMessage("Audio generation failed.", "bot");
                     }
                     resumeListening();
                 };
             } catch (err) {
                 console.error("Error playing summary audio:", err);
                 resumeListening();
-                addMessage("⚠️ Could not play the summary audio.", "bot");
+                addMessage("Could not play the summary audio.", "bot");
             }
             return;
         }
@@ -344,7 +344,7 @@
                 console.log("🎙️ Note dictation started...");
             } catch (e) {
                 console.error("🎤 Could not start note recognition:", e);
-                addMessage("⚠️ Microphone error. Please try again.", "bot");
+                addMessage("Microphone error. Please try again.", "bot");
                 isDictating = false;
                 try { recognition.start(); } catch (e2) {}
             }
@@ -364,12 +364,12 @@
                 addMessage(
                     data.success
                         ? `✅ Note added to notebook ${notebookId}.`
-                        : "❌ Failed to add note.",
+                        : "!Failed to add note.",
                     "bot"
                 );
             } catch (err) {
                 console.error(err);
-                addMessage("⚠️ Error adding note.", "bot");
+                addMessage("Error adding note.", "bot");
             }
 
             noteRecog.stop();
