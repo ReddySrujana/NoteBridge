@@ -5,19 +5,27 @@
   <meta charset="UTF-8">
   <title>Dashboard - NoteBridge</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f8fa;
-      color: #2c3e50;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f7fa;
+      color: #1f2937;
       display: flex;
       min-height: 100vh;
     }
 
+    /* -------------------------------
+   SIDEBAR
+--------------------------------*/
     .sidebar {
-      width: 250px;
-      background: linear-gradient(180deg, #2c3e50, #34495e);
-      color: #ecf0f1;
+      width: 220px;
+      background: linear-gradient(180deg, #9e1756, #6366f1);
+      color: #fff;
       height: 100vh;
       position: fixed;
       top: 0;
@@ -25,134 +33,150 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 25px 15px;
-      box-shadow: 3px 0 12px rgba(0, 0, 0, 0.15);
+      padding: 30px 15px;
+      gap: 20px;
     }
 
     .sidebar img {
-      width: 80px;
-      height: 80px;
+      width: 70px;
+      height: 70px;
       border-radius: 50%;
-      margin-bottom: 15px;
-      border: 2px solid #ecf0f1;
+      object-fit: cover;
+      border: 2px solid #fff;
     }
 
     .sidebar h2 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
       text-align: center;
-      margin-bottom: 30px;
-      color: #ecf0f1;
-      letter-spacing: 0.5px;
     }
 
     .sidebar a {
       width: 100%;
-      text-decoration: none;
-      color: #ecf0f1;
-      padding: 12px 15px;
+      padding: 10px 15px;
       margin: 5px 0;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #f3f4f6;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      text-align: left;
-      cursor: pointer;
-      font-size: 15px;
-      display: block;
+      transition: all 0.3s;
     }
 
     .sidebar a:hover {
       background: rgba(255, 255, 255, 0.2);
-      transform: translateX(3px);
+      transform: translateX(5px);
     }
 
+    /* -------------------------------
+   MAIN CONTENT
+--------------------------------*/
     .main-content {
-      margin-left: 260px;
-      padding: 30px;
+      margin-left: 220px;
       flex: 1;
+      padding: 30px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 25px;
     }
 
+    /* HEADER */
     header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
+      align-items: center;
       background: #fff;
-      padding: 15px 20px;
+      padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     }
 
-    .welcome {
-      font-size: 1.1rem;
+    header .welcome {
+      font-size: 1.2rem;
       font-weight: 600;
-      color: #34495e;
     }
 
-    .accessibility-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      background: #fff;
-      border-radius: 10px;
-      padding: 10px 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    section {
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s ease;
-    }
-
-    section:hover {
-      transform: translateY(-2px);
-    }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-      margin: 0;
-    }
-
-    li {
-      background: #f9fbfd;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      padding: 10px 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      transition: all 0.3s ease;
-    }
-
-    li:hover {
-      background: #eef4f8;
-      transform: scale(1.01);
-    }
-
+    /* BUTTONS */
     .btn {
-      background: #2980b9;
-      color: white;
-      border: none;
-      padding: 8px 14px;
+      background: #4f46e5;
+      color: #fff;
+      padding: 8px 16px;
       border-radius: 8px;
-      cursor: pointer;
+      border: none;
       font-weight: 500;
-      transition: all 0.3s ease;
+      cursor: pointer;
+      transition: all 0.3s;
     }
 
     .btn:hover {
-      background: #1f6391;
+      background: #6366f1;
       transform: translateY(-2px);
-      box-shadow: 0 3px 10px rgba(41, 128, 185, 0.2);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
+    /* SECTIONS */
+    section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    section:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    section h2 {
+      margin-bottom: 15px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    /* LIST ITEMS */
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: #f0f2f5;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    li:hover {
+      background: #e0e7ff;
+      transform: scale(1.02);
+    }
+
+    /* ACTIVITY LOG */
+    #activity-log {
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f0f2f5;
+    }
+
+    .activity-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid #d1d5db;
+    }
+
+    .activity-entry:last-child {
+      border-bottom: none;
+    }
+
+    /* FONT SIZES */
     .font-small {
       font-size: 14px;
     }
@@ -162,41 +186,40 @@
     }
 
     .font-large {
-      font-size: 20px;
+      font-size: 18px;
     }
 
+    /* HIGH CONTRAST MODE */
     .high-contrast {
-      background: black;
-      color: white !important;
+      background: #000;
+      color: #fff !important;
     }
 
     .high-contrast .sidebar {
-      background: black;
-      color: white;
+      background: #000;
     }
 
     .high-contrast .sidebar a {
-      color: white;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    #activity-log {
-      max-height: 250px;
-      overflow-y: auto;
-      background: #f9fbfd;
-      padding: 10px;
-      border-radius: 10px;
+    .high-contrast section,
+    .high-contrast li,
+    .high-contrast header {
+      background: #111 !important;
+      color: #fff !important;
     }
 
-    .activity-entry {
-      padding: 6px;
-      border-bottom: 1px solid #ddd;
-      font-size: 0.95rem;
-    }
-
-    .activity-entry:last-child {
-      border-bottom: none;
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #6b7280;
+      font-size: 0.9rem;
     }
   </style>
+
 </head>
 
 <body>
@@ -427,12 +450,20 @@
       }
 
       // --- Logout ---
-      if (cmd.includes('logout') || cmd.includes('sign out')) {
+      if (cmd.includes('logout') || cmd.includes('log out')) {
         console.log("🚪 Voice command: Logout");
         speak("Logging out.");
         window.location.href = '{{ url_for("auth.logout") }}';
         return;
       }
+      // --- Open Chatbot Page ---
+      if (cmd.includes('chatbot') || cmd.includes('open chatbot') || cmd.includes('go to chatbot')) {
+        console.log("💬 Voice command: Open Chatbot Page");
+        speak("Opening chatbot page.");
+        window.location.href = '/chatbot';
+        return;
+      }
+
 
       console.log("❓ No matching voice command for:", cmd);
     }
