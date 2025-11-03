@@ -433,6 +433,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+      // === GO BACK ===
+      if (command.includes("go back")) {
+        console.log("Voice command: Go Back");
+        speak("Going back to the previous page.");
+        window.history.back();
+        return;
+      }
+
+      // === DASHBOARD ===
+      if (command.includes("dashboard")) {
+        console.log("Voice command: Go to Dashboard");
+        speak("Navigating to dashboard.");
+        window.location.href = dashboardUrl;  
+        return;
+      }
+
+
+
       // === READ SUMMARY (play summary.mp3 directly) ===
       if (command.match(/read summary|read summarize/)) {
         console.log("🔊 Playing saved summary audio...");
@@ -583,14 +601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // === NAVIGATION ===
-  if (command.includes("dashboard") || command.includes("go back")) {
-    stopSpeaking();
-    speak("Navigating to dashboard.");
-    window.location.href = dashboardUrl;
-    return;
-  }
-
+  // logout command
   if (command.includes("logout") || command.includes("log out")) {
     stopSpeaking();
     speak("Logging out now.");
