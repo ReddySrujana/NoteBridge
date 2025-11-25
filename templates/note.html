@@ -203,6 +203,16 @@
       <textarea id="editor">{{ note['content'] }}</textarea>
     </section>
 
+    <section aria-label="Real-Time Transcription">
+      <h2>Live Transcription</h2>
+      <div id="transcription-box" style="background:#eef2f5; padding:10px; border-radius:8px; min-height:50px;"></div>
+
+      <p style="margin-top:10px; color:#555;">
+        STT Latency: <strong id="stt-latency">0</strong> ms
+      </p>
+    </section>
+
+
     <section>
       <h2>Tags</h2>
       <div class="tag-list" id="tag-list">
@@ -243,6 +253,7 @@
         <button type="submit" class="btn">Post Comment</button>
       </form>
     </section>
+    <!--Implement adjustable playback Speed-Anirudh-->
     <section aria-label="Audio Playback Controls">
       <h2>Audio Playback Controls</h2>
       <div id="audio-controls" style="display: flex; gap: 10px; align-items: center;">
@@ -261,23 +272,250 @@
       </div>
       <audio id="audio-player" src="/static/sample.mp3" preload="auto"></audio>
     </section>
+    <section aria-label="Voice Input Settings" id="voice-settings-section">
+      <h2>Voice Input Settings</h2>
+
+      <div style="margin-bottom: 12px;">
+        <label for="mic-sensitivity" id="mic-sens-label">Microphone Sensitivity:</label>
+        <input type="range" id="mic-sensitivity" min="0" max="100" value="75" aria-labelledby="mic-sens-label">
+        <span id="mic-sensitivity-value">75</span>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label for="voice-select">Select Voice:</label>
+        <select id="voice-select"></select>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <input type="checkbox" id="audio-cues-toggle" checked>
+        <label for="audio-cues-toggle">Enable Audio Cues</label>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <input type="checkbox" id="haptic-toggle" checked>
+        <label for="haptic-toggle">Enable Haptics</label>
+      </div>
+
+      <div>
+        <button id="reset-voice-settings" class="btn">Reset to Default</button>
+      </div>
+    </section>
 
     <footer>
       <p>&copy; {{ current_year or 2025 }} NoteBridge</p>
     </footer>
   </div>
 
-<script>
-  window.noteData = {
-    noteId: {{ note['id'] | tojson }},
-    notebookId: {{ note['notebook_id'] | tojson }},
-    noteTitle: {{ note['title'] | tojson }},
-    dashboardUrl: "{{ url_for('dashboard.dashboard') }}",
-    logoutUrl: "{{ url_for('auth.logout') }}"
-  };
-</script>
+  <script>
+    /* === Real-Time Transcription + TTS Feedback === */
 
-<script src="{{ url_for('static', filename='js/note_page.js') }}"></script>
+    // ===== User Preferences =====
+    window.userPreferences = {
+      voice: localStorage.getItem('voice') || 'default',
+      rate: parseFloat(localStorage.getItem('rate')) || 1,
+      pitch: parseFloat(localStorage.getItem('pitch')) || 1,
+      micSensitivity: parseInt(localStorage.getItem('micSensitivity')) || 75,
+      audioCues: localStorage.getItem('audioCues') !== 'false',
+      haptics: localStorage.getItem('haptics') !== 'false'
+    };
+
+    // ===== Audio & Haptic Feedback =====
+    function playBeep() {
+      if (!window.userPreferences.audioCues) return;
+      const beep = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=");
+      beep.play().catch(() => { });
+      if (window.userPreferences.haptics && navigator.vibrate) navigator.vibrate(100);
+    }
+
+    // ===== Speech Status Queue =====
+    const statusQueue = [];
+    let speakingStatus = false;
+
+    let voicesLoaded = false;
+    let availableVoices = [];
+    let speechStartTime = 0;
+
+
+    // ===== Load Voices =====
+    function loadVoices() {
+      return new Promise((resolve) => {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length) {
+          availableVoices = voices;
+          voicesLoaded = true;
+          resolve(voices);
+        } else {
+          speechSynthesis.onvoiceschanged = () => {
+            availableVoices = speechSynthesis.getVoices();
+            voicesLoaded = true;
+            resolve(availableVoices);
+          };
+        }
+      });
+    }
+
+    // ===== Speak Status =====
+    async function speakStatus(text) {
+      if (!window.speechSynthesis || !window.userPreferences.audioCues) return;
+
+      if (!voicesLoaded) await loadVoices();
+
+      if (speakingStatus) {
+        statusQueue.push(text);
+        return;
+      }
+
+      speakingStatus = true;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.voice = availableVoices.find(v => v.name === window.userPreferences.voice) || availableVoices[0];
+      utterance.rate = window.userPreferences.rate;
+      utterance.pitch = window.userPreferences.pitch;
+      utterance.volume = 1;
+
+      utterance.onend = () => {
+        speakingStatus = false;
+        if (statusQueue.length) speakStatus(statusQueue.shift());
+      };
+      utterance.onerror = (e) => {
+        console.error('SpeechSynthesis error:', e);
+        speakingStatus = false;
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // ===== Speech Recognition =====
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      console.log("🎧 Listening started");
+      speakStatus("Listening...");
+    };
+
+    recognition.onspeechstart = () => {
+      speechStartTime = performance.now();  // Start timing
+      playBeep();
+      speakStatus("Processing your speech...");
+    };
+
+    recognition.onresult = (event) => {
+      const last = event.results[event.results.length - 1];
+      if (!last.isFinal) return;
+
+      const transcript = last[0].transcript.trim();
+
+      // Calculate latency
+      const latency = performance.now() - speechStartTime;
+      console.log(`Speech-to-Text Latency: ${latency.toFixed(0)} ms`);
+
+      // Update latency display
+      const latencyEl = document.getElementById("stt-latency");
+      if (latencyEl) latencyEl.textContent = latency.toFixed(0);
+
+      // Show transcript
+      const box = document.getElementById('transcription-box');
+      if (box) box.textContent = transcript;
+
+      handleVoiceCommand(transcript);
+    };
+
+
+    recognition.onerror = (event) => console.error("Speech recognition error:", event);
+
+    recognition.onend = () => {
+      console.log("🎧 Listening ended, restarting...");
+      recognition.start();
+    };
+
+    // ===== Handle Voice Commands =====
+    async function handleVoiceCommand(command) {
+      command = command.toLowerCase().trim();
+
+      // --- Set Voice ---
+      if (command.startsWith("set voice")) {
+        const voiceName = command.replace("set voice", "").trim();
+        if (!voiceName) return;
+
+        if (!voicesLoaded) await loadVoices();
+
+        const match = availableVoices.find(v => v.name.toLowerCase() === voiceName.toLowerCase());
+        if (match) {
+          window.userPreferences.voice = match.name;
+          localStorage.setItem('voice', match.name);
+          speakStatus(`Voice set to ${match.name}`);
+        } else {
+          speakStatus(`Voice ${voiceName} not found`);
+        }
+        return;
+      }
+
+      // --- Set Speed / Rate ---
+      if (command.includes("set speed") || command.includes("set rate")) {
+        const numMatch = command.match(/(\d+(\.\d+)?)/);
+        if (numMatch) {
+          const rate = parseFloat(numMatch[1]);
+          window.userPreferences.rate = rate;
+          localStorage.setItem('rate', rate);
+          speakStatus(`Speech rate set to ${rate} times`);
+        } else {
+          speakStatus("Could not detect speed. Please say a number.");
+        }
+        return;
+      }
+
+      // --- Reset Preferences ---
+      if (command.includes("reset preferences")) {
+        localStorage.clear();
+        window.userPreferences = {
+          voice: 'default',
+          rate: 1,
+          pitch: 1,
+          micSensitivity: 75,
+          audioCues: true,
+          haptics: true
+        };
+        speakStatus("Preferences reset to default.");
+        return;
+      }
+    }
+
+    // ===== Start Recognition =====
+    recognition.start();
+
+    // ===== Populate Voice Dropdown =====
+    function populateVoices() {
+      const voiceSelect = document.getElementById('voice-select');
+      if (!voiceSelect) return;
+      availableVoices.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.name;
+        option.textContent = `${v.name} (${v.lang})`;
+        if (v.name === window.userPreferences.voice) option.selected = true;
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    loadVoices().then(() => {
+      populateVoices();
+    });
+
+    const voiceSelect = document.getElementById('voice-select');
+    if (voiceSelect) {
+      voiceSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        window.userPreferences.voice = val;
+        localStorage.setItem('voice', val);
+        speakStatus(`Voice set to ${val}`);
+      });
+    }
+  </script>
+
+
+  <script src="{{ url_for('static', filename='js/note_page.js') }}"></script>
 
 </body>
 
