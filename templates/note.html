@@ -406,7 +406,6 @@
       if (!last.isFinal) return;
 
       const transcript = last[0].transcript.trim();
-
       // Calculate latency
       const latency = performance.now() - speechStartTime;
       console.log(`Speech-to-Text Latency: ${latency.toFixed(0)} ms`);
