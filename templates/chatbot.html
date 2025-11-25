@@ -152,6 +152,8 @@
 
         let lastNotebookId = null;
         let isDictating = false;
+        let clarificationMode = null;
+
 
         function addMessage(text, sender = "bot") {
             const div = document.createElement('div');
@@ -217,25 +219,36 @@
 
         function pauseListening() { if (recognition) recognition.stop(); }
         function resumeListening() { if (recognition) recognition.start(); }
-        function promptRetry(message = "I didn't catch that. Could you please repeat?") {
-            addMessage(`⚠️ ${message}`, "bot");
-
-            // Speak the prompt for accessibility
-            const utter = new SpeechSynthesisUtterance(message);
-            speechSynthesis.speak(utter);
-        }
-
 
         // === MAIN COMMAND HANDLER ===
         async function handleCommand(command) {
+
+            // ---- Clarification handler ----
+            if (clarificationMode) {
+                const notebookId = extractNotebookId(command);
+
+                if (!notebookId) {
+                    addMessage("Sorry, I still didn’t hear a notebook number. Try again.", "bot");
+                    return;
+                }
+
+                const type = clarificationMode.type;
+                clarificationMode = null;  // Clear the mode
+
+                if (type === "summarize_missing_notebook") {
+                    handleCommand(`summarize note ${notebookId}`);
+                    return;
+                }
+
+                if (type === "add_note_missing_notebook") {
+                    handleCommand(`add note to note ${notebookId}`);
+                    return;
+                }
+            }
+
             command = autocorrectCommand(command);
             addMessage(command, "user");
             const notebookId = extractNotebookId(command);
-            // If a command requires notebook ID but it's missing
-            if ((command.includes("summarize") || command.includes("add note") || command.includes("post note")) && !notebookId) {
-                promptRetry("Please specify a notebook ID, like 'note one two three'.");
-                return;
-            }
 
             // === DASHBOARD / HELP / LOGOUT NAVIGATION ===
             if (command.includes("go to dashboard") || command.includes("open dashboard") || command.includes("dashboard")) {
@@ -265,9 +278,15 @@
             // === SUMMARIZE NOTEBOOK ===
             if (command.includes("summarize") || command.includes("summarise")) {
                 if (!notebookId) {
-                    addMessage("Please say a notebook ID, like 'summarize note one two three'.", "bot");
+                    addMessage("Which notebook would you like to summarize?", "bot");
+
+                    clarificationMode = {
+                        type: "summarize_missing_notebook"
+                    };
+
                     return;
                 }
+
                 lastNotebookId = notebookId;
                 try {
                     const res = await fetch(`/notebook/${notebookId}/summarize`);
@@ -290,9 +309,15 @@
             // === AI assisted ADD / POST NOTE (Voice Input)===
             if (command.includes("add note") || command.includes("post note")) {
                 if (!notebookId) {
-                    addMessage("Please say a notebook ID, e.g. 'add note to note one'", "bot");
+                    addMessage("Which notebook should I add a note to?", "bot");
+
+                    clarificationMode = {
+                        type: "add_note_missing_notebook"
+                    };
+
                     return;
                 }
+
 
                 lastNotebookId = notebookId;
                 addMessage("🗣️ Please dictate your note.", "bot");
@@ -383,6 +408,12 @@
                 return;
             }
         }
+        // === FALLBACK: NOTHING MATCHED ===
+        addMessage(
+            "I’m sorry, I didn’t understand that. You can say things like 'summarize note one', 'add note to note three', or 'open dashboard'.",
+            "bot"
+        );
+
         // === HELPER: START NOTE DICTATION ===
         function startNoteDictation(notebookId) {
             isDictating = true;
@@ -476,12 +507,9 @@
             inputEl.value = transcript;
             handleCommand(transcript);
         };
-        recognition.onerror = (e) => {
-            console.error("🎤 Speech recognition error:", e);
-            promptRetry("I couldn't understand your voice input. Please try again.");
-            try { recognition.start(); } catch (e2) { }
-        };
-
+        recognition.onend = () => recognition.start();
+        // recognition.onerror = e => console.error("Speech recognition error:", e);
+        recognition.start();
     </script>
 </body>
 
