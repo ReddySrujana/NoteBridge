@@ -205,12 +205,17 @@
 
     <section aria-label="Real-Time Transcription">
       <h2>Live Transcription</h2>
-      <div id="transcription-box" style="background:#eef2f5; padding:10px; border-radius:8px; min-height:50px;"></div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div id="mic-indicator" style="width:15px; height:15px; border-radius:50%; background:red;"></div>
+        <div id="transcription-box"
+          style="background:#eef2f5; padding:10px; border-radius:8px; min-height:50px; flex:1;"></div>
+      </div>
 
       <p style="margin-top:10px; color:#555;">
         STT Latency: <strong id="stt-latency">0</strong> ms
       </p>
     </section>
+
 
 
     <section>
@@ -382,7 +387,6 @@
 
       window.speechSynthesis.speak(utterance);
     }
-
     // ===== Speech Recognition =====
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -390,15 +394,21 @@
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
+    // ===== Microphone Indicator =====
+    const micIndicator = document.getElementById("mic-indicator");
+
+    // ===== Recognition Callbacks =====
     recognition.onstart = () => {
       console.log("🎧 Listening started");
       speakStatus("Listening...");
+      if (micIndicator) micIndicator.style.background = "green"; // active
     };
 
     recognition.onspeechstart = () => {
       speechStartTime = performance.now();  // Start timing
       playBeep();
       speakStatus("Processing your speech...");
+      if (micIndicator) micIndicator.style.background = "orange"; // processing
     };
 
     recognition.onresult = (event) => {
@@ -406,6 +416,7 @@
       if (!last.isFinal) return;
 
       const transcript = last[0].transcript.trim();
+
       // Calculate latency
       const latency = performance.now() - speechStartTime;
       console.log(`Speech-to-Text Latency: ${latency.toFixed(0)} ms`);
@@ -418,15 +429,21 @@
       const box = document.getElementById('transcription-box');
       if (box) box.textContent = transcript;
 
+      // Flash indicator briefly on new speech
+      if (micIndicator) {
+        micIndicator.style.background = "blue";
+        setTimeout(() => micIndicator.style.background = "green", 200);
+      }
+
       handleVoiceCommand(transcript);
     };
-
 
     recognition.onerror = (event) => console.error("Speech recognition error:", event);
 
     recognition.onend = () => {
       console.log("🎧 Listening ended, restarting...");
-      recognition.start();
+      if (micIndicator) micIndicator.style.background = "red"; // inactive
+      recognition.start(); // restart automatically
     };
 
     // ===== Handle Voice Commands =====
