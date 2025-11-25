@@ -592,7 +592,7 @@ def add_note(notebook_id):
 
 #=================================================================================================#
 # -----------------------------
-# SSE: Real-time Note Change Notifications
+# SSE: Real-time Note Change Notifications # Sprint 3
 # -----------------------------
 # Dictionary to hold subscribers for each notebook
 
