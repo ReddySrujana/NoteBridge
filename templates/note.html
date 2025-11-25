@@ -433,7 +433,6 @@
     // ===== Handle Voice Commands =====
     async function handleVoiceCommand(command) {
       command = command.toLowerCase().trim();
-
       // --- Set Voice ---
       if (command.startsWith("set voice")) {
         const voiceName = command.replace("set voice", "").trim();
@@ -451,7 +450,6 @@
         }
         return;
       }
-
       // --- Set Speed / Rate ---
       if (command.includes("set speed") || command.includes("set rate")) {
         const numMatch = command.match(/(\d+(\.\d+)?)/);
