@@ -456,6 +456,7 @@
           const rate = parseFloat(numMatch[1]);
           window.userPreferences.rate = rate;
           localStorage.setItem('rate', rate);
+          // feedback
           speakStatus(`Speech rate set to ${rate} times`);
         } else {
           speakStatus("Could not detect speed. Please say a number.");
