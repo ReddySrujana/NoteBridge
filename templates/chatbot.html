@@ -217,12 +217,25 @@
 
         function pauseListening() { if (recognition) recognition.stop(); }
         function resumeListening() { if (recognition) recognition.start(); }
+        function promptRetry(message = "I didn't catch that. Could you please repeat?") {
+            addMessage(`⚠️ ${message}`, "bot");
+
+            // Speak the prompt for accessibility
+            const utter = new SpeechSynthesisUtterance(message);
+            speechSynthesis.speak(utter);
+        }
+
 
         // === MAIN COMMAND HANDLER ===
         async function handleCommand(command) {
             command = autocorrectCommand(command);
             addMessage(command, "user");
             const notebookId = extractNotebookId(command);
+            // If a command requires notebook ID but it's missing
+            if ((command.includes("summarize") || command.includes("add note") || command.includes("post note")) && !notebookId) {
+                promptRetry("Please specify a notebook ID, like 'note one two three'.");
+                return;
+            }
 
             // === DASHBOARD / HELP / LOGOUT NAVIGATION ===
             if (command.includes("go to dashboard") || command.includes("open dashboard") || command.includes("dashboard")) {
@@ -463,9 +476,12 @@
             inputEl.value = transcript;
             handleCommand(transcript);
         };
-        recognition.onend = () => recognition.start();
-        // recognition.onerror = e => console.error("Speech recognition error:", e);
-        recognition.start();
+        recognition.onerror = (e) => {
+            console.error("🎤 Speech recognition error:", e);
+            promptRetry("I couldn't understand your voice input. Please try again.");
+            try { recognition.start(); } catch (e2) { }
+        };
+
     </script>
 </body>
 
