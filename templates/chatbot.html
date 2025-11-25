@@ -274,7 +274,7 @@
             }
 
 
-            // === AI assisted ADD / POST NOTE (Voice Input) ===
+            // === AI assisted ADD / POST NOTE (Voice Input)===
             if (command.includes("add note") || command.includes("post note")) {
                 if (!notebookId) {
                     addMessage("Please say a notebook ID, e.g. 'add note to note one'", "bot");
@@ -297,78 +297,78 @@
                 return;
             }
 
-           // === READ SUMMARY AUDIO (FAST VERSION) ===
-const cmd = command.toLowerCase().trim();
+            // === READ SUMMARY AUDIO (FAST VERSION) ===
+            const cmd = command.toLowerCase().trim();
 
-if (cmd.includes("read summary") || cmd.includes("read the summary")) {
+            if (cmd.includes("read summary") || cmd.includes("read the summary")) {
 
-    if (!lastNotebookId) {
-        addMessage("No notebook selected yet. Summarize one first.", "bot");
-        return;
-    }
+                if (!lastNotebookId) {
+                    addMessage("No notebook selected yet. Summarize one first.", "bot");
+                    return;
+                }
 
-    pauseListening();
+                pauseListening();
 
-    // Stop any currently playing audio fast
-    if (window.currentSummaryAudio) {
-        try {
-            window.currentSummaryAudio.pause();
-            window.currentSummaryAudio.src = "";
-        } catch (e) {}
-        window.currentSummaryAudio = null;
-    }
+                // Stop any currently playing audio fast
+                if (window.currentSummaryAudio) {
+                    try {
+                        window.currentSummaryAudio.pause();
+                        window.currentSummaryAudio.src = "";
+                    } catch (e) { }
+                    window.currentSummaryAudio = null;
+                }
 
-    const audioUrl = `/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`;
-    const audio = new Audio();
-    window.currentSummaryAudio = audio;
+                const audioUrl = `/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`;
+                const audio = new Audio();
+                window.currentSummaryAudio = audio;
 
-    console.log("🔊 Loading summary audio...");
+                console.log("🔊 Loading summary audio...");
 
-    // Preload audio to avoid delay before playing
-    audio.preload = "auto";
-    audio.src = audioUrl;
+                // Preload audio to avoid delay before playing
+                audio.preload = "auto";
+                audio.src = audioUrl;
 
-    // When ready, play immediately
-    audio.oncanplaythrough = () => {
-        console.log("▶️ Summary audio playing immediately.");
-        audio.play();
-    };
+                // When ready, play immediately
+                audio.oncanplaythrough = () => {
+                    console.log("▶️ Summary audio playing immediately.");
+                    audio.play();
+                };
 
-    // If it finishes playing
-    audio.onended = () => {
-        console.log("Summary finished.");
-        window.currentSummaryAudio = null;
-        resumeListening();
-    };
+                // If it finishes playing
+                audio.onended = () => {
+                    console.log("Summary finished.");
+                    window.currentSummaryAudio = null;
+                    resumeListening();
+                };
 
-    // If the audio fails (file missing or corrupted), regenerate once
-    audio.onerror = async () => {
-        console.warn("Summary audio missing, regenerating...");
-        addMessage("🎤 Generating new summary audio...", "bot");
+                // If the audio fails (file missing or corrupted), regenerate once
+                audio.onerror = async () => {
+                    console.warn("Summary audio missing, regenerating...");
+                    addMessage("🎤 Generating new summary audio...", "bot");
 
-        try {
-            const res = await fetch(`/notebook/${lastNotebookId}/summary.mp3`, { method: "POST" });
+                    try {
+                        const res = await fetch(`/notebook/${lastNotebookId}/summary.mp3`, { method: "POST" });
 
-            if (res.ok) {
-                // Reload fresh audio fast
-                audio.src = `/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`;
-                audio.play().catch(() => {
-                    addMessage("Could not play regenerated summary.", "bot");
-                });
-            } else {
-                addMessage("Failed to regenerate summary audio.", "bot");
-                resumeListening();
+                        if (res.ok) {
+                            // Reload fresh audio fast
+                            audio.src = `/notebook/${lastNotebookId}/summary.mp3?ts=${Date.now()}`;
+                            audio.play().catch(() => {
+                                addMessage("Could not play regenerated summary.", "bot");
+                            });
+                        } else {
+                            addMessage("Failed to regenerate summary audio.", "bot");
+                            resumeListening();
+                        }
+
+                    } catch (e) {
+                        console.error("Regeneration error:", e);
+                        addMessage("Audio generation failed.", "bot");
+                        resumeListening();
+                    }
+                };
+
+                return;
             }
-
-        } catch (e) {
-            console.error("Regeneration error:", e);
-            addMessage("Audio generation failed.", "bot");
-            resumeListening();
-        }
-    };
-
-    return;
-}
         }
         // === HELPER: START NOTE DICTATION ===
         function startNoteDictation(notebookId) {
